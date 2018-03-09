@@ -1,0 +1,13 @@
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+
+SELECT ?name ?abstract ?thumbnail ?subject ?sameAs ?wasDerivedFrom where {
+ ?name a dbo:Disease;
+       dbo:abstract ?abstract;
+       dbo:thumbnail ?thumbnail;
+       dct:subject ?subject;
+       owl:sameAs ?sameAs;
+       prov:wasDerivedFrom ?wasDerivedFrom.
+}
