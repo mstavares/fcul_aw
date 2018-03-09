@@ -2,12 +2,16 @@ PREFIX dbo: <http://dbpedia.org/ontology/>
 PREFIX dct: <http://purl.org/dc/terms/>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-SELECT ?name ?abstract ?thumbnail ?subject ?sameAs ?wasDerivedFrom where {
- ?name a dbo:Disease;
+SELECT ?url ?name ?abstract ?thumbnail ?subject ?sameAs ?wasDerivedFrom where {
+ ?url a dbo:Disease;
+       rdfs:label ?name;
        dbo:abstract ?abstract;
        dbo:thumbnail ?thumbnail;
        dct:subject ?subject;
        owl:sameAs ?sameAs;
        prov:wasDerivedFrom ?wasDerivedFrom.
+       FILTER (LANG(?abstract)='en')
+       FILTER (LANG(?name)='en')
 }
