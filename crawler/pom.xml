@@ -30,7 +30,6 @@
       <groupId>pt.ulisboa.ciencias.di.aw1718.group06</groupId>
       <artifactId>dataaccess</artifactId>
       <version>0.0.1-SNAPSHOT</version>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 
