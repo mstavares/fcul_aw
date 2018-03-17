@@ -30,3 +30,7 @@ hs_err_pid*
 
 # Maven 
 target/
+
+# Intellij files
+.idea/
+*.iml
