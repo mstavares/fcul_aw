@@ -13,20 +13,49 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.List;
 import java.util.Properties;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
+    private static final String CONFIG_FILE_NAME = "config.properties";
 
 	public static void main(String[] args) {
 
-        String configFileName = "config.properties";
-        MysqlDataSource dataSource;
+        MysqlDataSource dataSource = getDataSourceFromConfig(CONFIG_FILE_NAME);
+        if (dataSource == null) {
+            logger.error("Failed to get data source from config: {}", CONFIG_FILE_NAME);
+            return;
+        }
 
+        Twitter twitter = TwitterFactory.getSingleton();
+
+        // Example disease data
+        String diseaseName = "asthma";
+        String diseaseDescription = "asthma description";
+        String derivedFrom = "derived from";
+
+        try(Connection conn = dataSource.getConnection()) {
+            DiseaseCatalog catalog = new DiseaseCatalog(conn);
+            Disease disease = catalog.createDisease(diseaseName, diseaseDescription, derivedFrom);
+
+            TwitterCrawler twitterCrawler = new TwitterCrawler(catalog, twitter);
+            twitterCrawler.update(disease);
+
+            List<Disease> diseases = catalog.getDiseases();
+            for (Disease d : diseases) {
+                logger.info("{}: {} (from: {}) - {}", d.getId(), d.getName(), d.getDescription(), d.getDerivedFrom());
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error while connecting to database: ", e);
+        }
+
+    }
+
+    private static MysqlDataSource getDataSourceFromConfig(String configFileName) {
+        MysqlDataSource dataSource;
         try (InputStream input = ClassLoader.getSystemResourceAsStream(configFileName)) {
             logger.info("Reading properties from file: {}.", configFileName);
             Properties props = new Properties();
@@ -40,55 +69,11 @@ public class Main {
 
         } catch (FileNotFoundException e) {
             logger.error("Properties file not found.", e);
-            return;
+            return null;
         } catch (IOException e) {
             logger.error("Error while reading properties file.", e);
-            return;
+            return null;
         }
-
-        DiseaseCatalog catalog = DiseaseCatalog.getInstance();
-
-        try(Connection conn = dataSource.getConnection()) {
-
-            String SQL_INSERT = "INSERT INTO diseases (name, abstract, was_derived_from) VALUES (?, ?, ?)";
-            PreparedStatement statement = conn.prepareStatement(SQL_INSERT, Statement.RETURN_GENERATED_KEYS);
-            String diseaseName = "asthma";
-            String diseaseDescription = "asthma description";
-            String derivedFrom = "derived from";
-            statement.setString(1, diseaseName);
-            statement.setString(2, diseaseDescription);
-            statement.setString(3, derivedFrom);
-
-            int affected = statement.executeUpdate();
-            if (affected == 0) {
-                throw new SQLException("Creating entry failed, no rows affected.");
-            }
-
-            try (ResultSet keys = statement.getGeneratedKeys()) {
-                if (keys.next()) {
-                    int id = keys.getInt(1);
-                    Disease disease = new Disease(id, diseaseName, diseaseDescription, derivedFrom);
-
-                    Twitter twitter = TwitterFactory.getSingleton();
-                    TwitterCrawler twitterCrawler = new TwitterCrawler(catalog, twitter);
-                    twitterCrawler.update(disease);
-                }
-            }
-
-            Statement stmt = conn.createStatement();
-            try (ResultSet result = stmt.executeQuery("SELECT * FROM diseases")) {
-                while (result.next()) {
-                    int id = result.getInt("id");
-                    String name = result.getString("name");
-                    String description = result.getString("abstract");
-                    String derived = result.getString("was_derived_from");
-                    logger.info("{}: {} (from: {}) - {}", id, name, derived, description);
-                }
-            }
-
-        } catch (SQLException e) {
-            logger.error("Error while connecting to database: ", e);
-        }
-
+        return dataSource;
     }
 }

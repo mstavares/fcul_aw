@@ -1,29 +1,58 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.dataaccess;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DiseaseCatalog {
 
 	private Connection conn;
 	
-	private DiseaseCatalog() {
-		// TODO initialize the mysql connection
+    private static final String SQL_INSERT = "INSERT INTO diseases (name, abstract, was_derived_from) VALUES (?, ?, ?)";
+    private static final String SQL_SELECT_ALL = "SELECT * FROM diseases";
+
+
+	public DiseaseCatalog(Connection connection) {
+		this.conn = connection;
 	}
+
+	public Disease createDisease(String name, String description, String derivedFrom) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(SQL_INSERT, Statement.RETURN_GENERATED_KEYS);
+        statement.setString(1, name);
+        statement.setString(2, description);
+        statement.setString(3, derivedFrom);
+
+        int affected = statement.executeUpdate();
+        if (affected == 0) {
+            throw new SQLException("Creating entry failed, no rows affected.");
+        }
+
+        try (ResultSet keys = statement.getGeneratedKeys()) {
+            if (keys.next()) {
+                int id = keys.getInt(1);
+                return new Disease(id, name, description, derivedFrom);
+            }
+        }
+        throw new SQLException("Retrieving generated id failed.");
+    }
 	
-	private static class StaticHolder {
-		static final DiseaseCatalog INSTANCE = new DiseaseCatalog();
-	}
-    
-	
-	public static DiseaseCatalog getInstance(){
-		return StaticHolder.INSTANCE;
-	}
-	
-	
-	public List<Disease> getDiseases(){
-		//TODO auto generated method stub
-		return null;
+	public List<Disease> getDiseases() throws SQLException {
+        ArrayList<Disease> results = new ArrayList<>();
+        Statement stmt = conn.createStatement();
+        try (ResultSet result = stmt.executeQuery(SQL_SELECT_ALL)) {
+            while (result.next()) {
+                int id = result.getInt("id");
+                String name = result.getString("name");
+                String description = result.getString("abstract");
+                String derived = result.getString("was_derived_from");
+                results.add(new Disease(id, name, description, derived));
+            }
+        }
+		return results;
 	}
 	
 	
