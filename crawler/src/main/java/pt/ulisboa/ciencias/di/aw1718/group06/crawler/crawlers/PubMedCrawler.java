@@ -1,5 +1,6 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.crawler.crawlers;
 
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
 
 public class PubMedCrawler extends Crawler {
@@ -12,7 +13,7 @@ public class PubMedCrawler extends Crawler {
 
 
 	@Override
-	public boolean update(String disease) {
+	public boolean update(Disease disease) {
 		// TODO Auto-generated method stub
 		return false;
 	}
