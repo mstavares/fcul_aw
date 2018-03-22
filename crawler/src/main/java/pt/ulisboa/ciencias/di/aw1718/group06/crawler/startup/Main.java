@@ -1,8 +1,10 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.crawler.startup;
 
+import com.flickr4java.flickr.Flickr;
 import com.mysql.cj.jdbc.MysqlDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pt.ulisboa.ciencias.di.aw1718.group06.crawler.crawlers.FlickrCrawler;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.crawlers.TwitterCrawler;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
@@ -40,8 +42,13 @@ public class Main {
             DiseaseCatalog catalog = new DiseaseCatalog(conn);
             Disease disease = catalog.createDisease(diseaseName, diseaseDescription, derivedFrom);
 
+            // TODO fix reinstantiation
             TwitterCrawler twitterCrawler = new TwitterCrawler(catalog, twitter);
             twitterCrawler.update(disease);
+
+            // TODO fix reinstantiation
+            FlickrCrawler flickrCrawler = new FlickrCrawler(catalog);
+            flickrCrawler.update(disease);
 
             List<Disease> diseases = catalog.getDiseases();
             for (Disease d : diseases) {

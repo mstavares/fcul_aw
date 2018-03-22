@@ -16,7 +16,8 @@ public class DiseaseCatalog {
     private static final String SQL_SELECT_ALL_DESEASES = "SELECT * FROM diseases";
     private static final String SQL_INSERT_TWEET = "INSERT INTO tweets (url, text) VALUES (?, ?)";
     private static final String SQL_INSERT_TWEET_DISEASE_LINKING = "INSERT INTO diseases_tweets (id_diseases, id_tweets) VALUES (?, ?)";
-
+    private static final String SQL_INSERT_IMAGE = "INSERT INTO images (url) VALUES (?)";
+    private static final String SQL_INSERT_IMAGE_DISEASE_LINKING = "INSERT INTO diseases_images (id_diseases, id_images) VALUES (?, ?)";
 
 	public DiseaseCatalog(Connection connection) {
 		this.conn = connection;
@@ -94,6 +95,33 @@ public class DiseaseCatalog {
                     throw new SQLException("Creating entry failed, no rows affected.");
                 }
                 return new Tweet(id, String.valueOf(id), text);
+            }
+        }
+        throw new SQLException("Retrieving generated id failed.");
+    }
+
+    public Image createImage(Disease disease, String url) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(SQL_INSERT_IMAGE, Statement.RETURN_GENERATED_KEYS);
+        statement.setString(1, url);
+
+        int affected = statement.executeUpdate();
+        if (affected == 0) {
+            throw new SQLException("Creating entry failed, no rows affected.");
+        }
+
+        try (ResultSet keys = statement.getGeneratedKeys()) {
+            if (keys.next()) {
+                int id = keys.getInt(1);
+                // Add entry in linking table.
+                PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_IMAGE_DISEASE_LINKING, Statement.RETURN_GENERATED_KEYS);
+                stmt.setInt(1, disease.getId());
+                stmt.setInt(2, id);
+
+                affected = stmt.executeUpdate();
+                if (affected == 0) {
+                    throw new SQLException("Creating entry failed, no rows affected.");
+                }
+                return new Image(id, url);
             }
         }
         throw new SQLException("Retrieving generated id failed.");
