@@ -3,6 +3,8 @@ package pt.ulisboa.ciencias.di.aw1718.group06.crawler.startup;
 import com.mysql.cj.jdbc.MysqlDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import pt.ulisboa.ciencias.di.aw1718.group06.crawler.crawlers.DbPediaCrawler;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.crawlers.TwitterCrawler;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
@@ -31,21 +33,17 @@ public class Main {
 
         Twitter twitter = TwitterFactory.getSingleton();
 
-        // Example disease data
-        String diseaseName = "asthma";
-        String diseaseDescription = "asthma description";
-        String derivedFrom = "derived from";
-
         try(Connection conn = dataSource.getConnection()) {
             DiseaseCatalog catalog = new DiseaseCatalog(conn);
-            Disease disease = catalog.createDisease(diseaseName, diseaseDescription, derivedFrom);
-
+            
+            DbPediaCrawler dbpediaCrawler = new DbPediaCrawler(catalog);
+            List<Disease> diseases = dbpediaCrawler.update();
+            
             TwitterCrawler twitterCrawler = new TwitterCrawler(catalog, twitter);
-            twitterCrawler.update(disease);
-
-            List<Disease> diseases = catalog.getDiseases();
+            
             for (Disease d : diseases) {
-                logger.info("{}: {} (from: {}) - {}", d.getId(), d.getName(), d.getDescription(), d.getDerivedFrom());
+            	twitterCrawler.update(d);
+                //logger.info("{}: {} (from: {}) - {}", d.getId(), d.getName(), d.getDescription(), d.getDerivedFrom());
             }
 
         } catch (SQLException e) {
