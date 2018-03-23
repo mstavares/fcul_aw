@@ -29,8 +29,7 @@ public class TwitterCrawler extends Crawler {
 	@Override
 	public boolean update(Disease disease) {
 
-        Query query = new Query(disease.getName());
-        // TODO: Check for retweets and filter out distinct tweets!
+        Query query = new Query(disease.getName() + " +exclude:retweets");
         query.setCount(STORED_TWEET_COUNT);
         try {
             QueryResult result = this.twitter.search(query);
