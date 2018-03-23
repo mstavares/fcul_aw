@@ -1,6 +1,5 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.crawler.startup;
 
-import com.flickr4java.flickr.Flickr;
 import com.mysql.cj.jdbc.MysqlDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +18,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
+<<<<<<< 57b23a1cea3abe798346079a199acc94091fee34
 import java.sql.Timestamp;
+=======
+import java.util.ArrayList;
+>>>>>>> improved main, optional args
 import java.util.List;
 import java.util.Properties;
 
@@ -29,32 +32,56 @@ public class Main {
 
 	public static void main(String[] args) {
 		
-		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        long one = timestamp.getTime();
-
+		boolean forceUpdate = forceUpdate(args);
+		String singleDisease = getSingleDisease(args);
+		
         MysqlDataSource dataSource = getDataSourceFromConfig(CONFIG_FILE_NAME);
         if (dataSource == null) {
             //logger.error("Failed to get data source from config: {}", CONFIG_FILE_NAME);
             return;
         }
-
+        
+        System.setProperty("twitter4j.loggerFactory", "twitter4j.NullLoggerFactory");
         Twitter twitter = TwitterFactory.getSingleton();
 
         try(Connection conn = dataSource.getConnection()) {
             DiseaseCatalog catalog = new DiseaseCatalog(conn);
             
-            DbPediaCrawler dbpediaCrawler = new DbPediaCrawler(catalog);
-            List<Disease> diseases = dbpediaCrawler.update();
+            List<Disease> diseases = catalog.getDiseases();
+            
+            if (singleDisease != null) {
+            	Disease d = catalog.getDisease(singleDisease);
+            	if (d != null) {
+            		diseases = new ArrayList<Disease>();
+            		diseases.add(d);
+            	}else {
+            		logger.info("Couldn't find the disease " + singleDisease);
+            		System.exit(-1);
+            	}
+            }
+            
+            if (forceUpdate || diseases.size() == 0) {
+                DbPediaCrawler dbpediaCrawler = new DbPediaCrawler(catalog);
+                List<Disease> temp = dbpediaCrawler.update();
+                logger.info("Added " + diseases.size() + " diseases to the database.");
+                
+                if (singleDisease == null)
+                	diseases = temp;
+            }
+
             
             TwitterCrawler twitterCrawler = new TwitterCrawler(catalog, twitter);
             PubMedCrawler pubmedCrawler = new PubMedCrawler(catalog);
             FlickrCrawler flickrCrawler = new FlickrCrawler(catalog);
             
             for (Disease d : diseases) {
-            	twitterCrawler.update(d);
-                pubmedCrawler.update(d);
-                flickrCrawler.update(d);
-                //logger.info("{}: {} (from: {}) - {}", d.getId(), d.getName(), d.getDescription(), d.getDerivedFrom());
+            	boolean sucT = twitterCrawler.update(d);
+            	boolean sucP = pubmedCrawler.update(d);
+            	boolean sucF = flickrCrawler.update(d);
+                String s = (sucT? "twitter, " : "")
+                	+ (sucP? "pubmed, " : "")
+                	+ (sucF? "flickr, " : "");
+                logger.info("Updated " + s + " info for " + d.getName());
             }
 
         } catch (SQLException e) {
@@ -89,4 +116,37 @@ public class Main {
         }
         return dataSource;
     }
+    
+    
+    private static boolean forceUpdate(String[] args) {
+    	for (String s: args)
+    		if (s.equals("-f")) {
+    			logger.info("Force updating diseases.");
+    			return true;
+    		}
+    			
+    	
+    	return false;
+    }
+    
+    
+    private static String getSingleDisease(String[] args) {
+    	boolean flag = false;
+    	
+    	for (String s: args) {
+    		if (flag) {
+    			logger.info("Updating single diseas: " + s);
+    			return s;
+    		}
+    		
+    		if (s.equals("-d"))
+    			flag = true;
+    		else
+    			flag = false;
+    	}
+    	
+    	return null;
+    }
+    
+    
 }
