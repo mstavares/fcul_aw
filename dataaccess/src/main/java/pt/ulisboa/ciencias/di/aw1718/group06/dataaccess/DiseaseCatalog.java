@@ -25,6 +25,8 @@ public class DiseaseCatalog {
     private static final String SQL_INSERT_IMAGE = "INSERT INTO images (url) VALUES (?)";
     private static final String SQL_INSERT_IMAGE_DISEASE_LINKING = "INSERT INTO diseases_images (id_diseases, id_images) VALUES (?, ?)";
 
+	private static final String SQL_GET_PUBMED_BY_PUBMEDID = "SELECT id FROM pubmed WHERE pubmedID = ?";
+
 	public DiseaseCatalog(Connection connection) {
 		this.conn = connection;
 	}
@@ -151,6 +153,33 @@ public class DiseaseCatalog {
     		}
     	}
     	throw new SQLException("Retrieving generated id failed.");
+    }
+    
+    public boolean addPubMedLinkings(int diseaseID, int pubmedID) throws SQLException {
+    	PreparedStatement statement = conn.prepareStatement(SQL_GET_PUBMED_BY_PUBMEDID, Statement.RETURN_GENERATED_KEYS);
+    	statement.setString(1, String.valueOf(pubmedID));
+
+    	int affected = statement.executeUpdate();
+    	if (affected == 0) {
+    		return false;
+    	}
+
+    	try (ResultSet keys = statement.getGeneratedKeys()) {
+    		while (keys.next()) {
+
+    			// Add entry in linking table.
+    			PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_PUBMED_DISEASE_LINKING, Statement.RETURN_GENERATED_KEYS);
+    			stmt.setInt(1, diseaseID);
+    			stmt.setInt(2, keys.getInt(0));
+
+    			affected = stmt.executeUpdate();
+    			if (affected == 0) {
+    				return false;
+    			}
+    			return true;
+    		}
+    	}
+    	return false;
     }
     
     

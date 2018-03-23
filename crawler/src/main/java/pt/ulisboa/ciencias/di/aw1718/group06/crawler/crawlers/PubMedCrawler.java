@@ -38,17 +38,18 @@ public class PubMedCrawler extends Crawler {
 
 	@Override
 	public boolean update(Disease disease){
-		
+		int id = -1;
 		try {
 			String diseaseEncoded = URLEncoder.encode(disease.getName(), "UTF-8");
 			
 			String requestURL = String.format(BASE_URL_SEARCH_IDS, RETURN_LIMIT, diseaseEncoded);
 			Document document = getDocument(requestURL);
 			
+			
 			NodeList ids = document.getElementsByTagName(ID_TAG_NAME);
 			for(int i=0; i<ids.getLength(); i++){
 				Node node = ids.item(i);
-				int id = Integer.parseInt(node.getTextContent());
+				id = Integer.parseInt(node.getTextContent());
 				String req = String.format(BASE_URL_ARTICLE, id);
 				Document doc = getDocument(req);
 				String title = getTagValue(doc, TITLE_TAG_NAME);
@@ -64,8 +65,12 @@ public class PubMedCrawler extends Crawler {
 			//System.err.println("Error parsing xml document");
 			return false;
 		} catch (SQLException e) {
-			//System.err.println("Error while writing to database");
-			return false;
+
+			try {
+				return diseaseCatalog.addPubMedLinkings(disease.getId(), id);
+			} catch (SQLException e1) {
+				return false;
+			}
 		}
 		
 		
