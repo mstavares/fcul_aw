@@ -15,6 +15,7 @@ public class DiseaseCatalog {
 	
     private static final String SQL_INSERT_DISEASE = "INSERT INTO diseases (name, abstract, was_derived_from) VALUES (?, ?, ?)";
     private static final String SQL_SELECT_ALL_DESEASES = "SELECT * FROM diseases";
+    private static final String SQL_SELECT_SINGLE_DISEASE = "SELECT * FROM diseases WHERE name = ?";
     private static final String SQL_INSERT_TWEET = "INSERT INTO tweets (url, text) VALUES (?, ?)";
     private static final String SQL_INSERT_TWEET_DISEASE_LINKING = "INSERT INTO diseases_tweets (id_diseases, id_tweets) VALUES (?, ?)";
 
@@ -69,6 +70,26 @@ public class DiseaseCatalog {
 	}
 	
 	
+	public Disease getDisease(String searchTerm) throws SQLException {
+        Disease disease = null;
+        
+        Statement stmt = conn.createStatement();
+        PreparedStatement statement = conn.prepareStatement(SQL_SELECT_SINGLE_DISEASE);
+        statement.setString(1, searchTerm);
+        
+        try (ResultSet result = statement.executeQuery()) {
+            while (result.next()) {
+                int id = result.getInt("id");
+                String name = result.getString("name");
+                String description = result.getString("abstract");
+                String derived = result.getString("was_derived_from");
+                disease = new Disease(id, name, description, derived);
+            }
+        }
+		return disease;
+	}
+	
+	
     public Tweet createTweet(Disease disease, long tweetId, String text) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(SQL_INSERT_TWEET, Statement.RETURN_GENERATED_KEYS);
         // TODO: change from URL to twitterID.
@@ -98,6 +119,7 @@ public class DiseaseCatalog {
         throw new SQLException("Retrieving generated id failed.");
     }
 
+    
     public PubMed addPubMedInfo(int diseaseID, int pubmedID, String title, String abstrct) throws SQLException {
     	PreparedStatement statement = conn.prepareStatement(SQL_INSERT_PUBMED, Statement.RETURN_GENERATED_KEYS);
     	statement.setString(1, String.valueOf(pubmedID));
@@ -127,6 +149,7 @@ public class DiseaseCatalog {
     	throw new SQLException("Retrieving generated id failed.");
     }
     
+    
     public Image createImage(Disease disease, String url) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(SQL_INSERT_IMAGE, Statement.RETURN_GENERATED_KEYS);
         statement.setString(1, url);
@@ -152,6 +175,5 @@ public class DiseaseCatalog {
             }
         }
         throw new SQLException("Retrieving generated id failed.");
-
     }
 }
