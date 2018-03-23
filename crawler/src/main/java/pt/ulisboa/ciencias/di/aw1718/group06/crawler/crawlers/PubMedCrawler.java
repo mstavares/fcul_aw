@@ -29,7 +29,7 @@ public class PubMedCrawler extends Crawler {
 	private final String TITLE_TAG_NAME = "ArticleTitle";
 	private final String ABSTRACT_TAG_NAME = "AbstractText";
 	
-	private final int RETURN_LIMIT = 10;
+	private final int RETURN_LIMIT = 3;
 	
 	public PubMedCrawler(DiseaseCatalog diseaseCatalog) {
 		super(diseaseCatalog);
@@ -45,7 +45,6 @@ public class PubMedCrawler extends Crawler {
 			String requestURL = String.format(BASE_URL_SEARCH_IDS, RETURN_LIMIT, diseaseEncoded);
 			Document document = getDocument(requestURL);
 			
-
 			NodeList ids = document.getElementsByTagName(ID_TAG_NAME);
 			for(int i=0; i<ids.getLength(); i++){
 				Node node = ids.item(i);
@@ -74,16 +73,25 @@ public class PubMedCrawler extends Crawler {
 	}
 	
 	private String getTagValue(Document document, String tagname) {	
-		NodeList titleNode = document.getElementsByTagName(tagname);
-		String title = titleNode.item(0).getTextContent();
+		String value = null;
 
-		return title;
+		NodeList titleNode = document.getElementsByTagName(tagname);
+		if(titleNode.getLength() == 0) {
+			value = "Abstract not available";
+		} else {
+			StringBuilder sb = new StringBuilder();
+			for(int i = 0; i < titleNode.getLength(); i++) {
+				sb.append(titleNode.item(i).getTextContent());
+			}
+			value = sb.toString();
+		}
+		return value;
 	}
 
 	private Document getDocument(String requestURL)
 			throws IOException, SAXException, ParserConfigurationException {
 		
-		URL url = new URL(requestURL);        
+		URL url = new URL(requestURL);
 		InputStream is = url.openConnection().getInputStream();       
 		DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder = builderFactory.newDocumentBuilder();

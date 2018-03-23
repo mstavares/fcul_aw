@@ -19,18 +19,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Properties;
 
 public class Main {
-    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+    //private static final Logger logger = LoggerFactory.getLogger(Main.class);
     private static final String CONFIG_FILE_NAME = "config.properties";
 
 	public static void main(String[] args) {
+		
+		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        long one = timestamp.getTime();
 
         MysqlDataSource dataSource = getDataSourceFromConfig(CONFIG_FILE_NAME);
         if (dataSource == null) {
-            logger.error("Failed to get data source from config: {}", CONFIG_FILE_NAME);
+            //logger.error("Failed to get data source from config: {}", CONFIG_FILE_NAME);
             return;
         }
 
@@ -54,15 +58,19 @@ public class Main {
             }
 
         } catch (SQLException e) {
-            logger.error("Error while connecting to database: ", e);
+            //logger.error("Error while connecting to database: ", e);
         }
+        
+        timestamp = new Timestamp(System.currentTimeMillis());
+		long two = timestamp.getTime();
+		System.out.println(two-one);
 
     }
 
     private static MysqlDataSource getDataSourceFromConfig(String configFileName) {
         MysqlDataSource dataSource;
         try (InputStream input = ClassLoader.getSystemResourceAsStream(configFileName)) {
-            logger.info("Reading properties from file: {}.", configFileName);
+            //logger.info("Reading properties from file: {}.", configFileName);
             Properties props = new Properties();
             props.load(input);
             dataSource = new MysqlDataSource();
@@ -73,10 +81,10 @@ public class Main {
             dataSource.setPort(Integer.valueOf(props.getProperty("db.port")));
 
         } catch (FileNotFoundException e) {
-            logger.error("Properties file not found.", e);
+            //logger.error("Properties file not found.", e);
             return null;
         } catch (IOException e) {
-            logger.error("Error while reading properties file.", e);
+            //logger.error("Error while reading properties file.", e);
             return null;
         }
         return dataSource;

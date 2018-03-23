@@ -18,7 +18,7 @@ public class TwitterCrawler extends Crawler {
 
 	private final String BASE_URL = "";
     private final Twitter twitter;
-    private int STORED_TWEET_COUNT = 10;
+    private int STORED_TWEET_COUNT = 5;
 
     public TwitterCrawler(DiseaseCatalog diseaseCatalog, Twitter twitter) {
 		super(diseaseCatalog);

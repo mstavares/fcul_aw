@@ -98,7 +98,6 @@ public class DiseaseCatalog {
         throw new SQLException("Retrieving generated id failed.");
     }
 
-<<<<<<< HEAD
     public PubMed addPubMedInfo(int diseaseID, int pubmedID, String title, String abstrct) throws SQLException {
     	PreparedStatement statement = conn.prepareStatement(SQL_INSERT_PUBMED, Statement.RETURN_GENERATED_KEYS);
     	statement.setString(1, String.valueOf(pubmedID));
@@ -126,7 +125,8 @@ public class DiseaseCatalog {
     		}
     	}
     	throw new SQLException("Retrieving generated id failed.");
-=======
+    }
+    
     public Image createImage(Disease disease, String url) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(SQL_INSERT_IMAGE, Statement.RETURN_GENERATED_KEYS);
         statement.setString(1, url);
@@ -152,6 +152,6 @@ public class DiseaseCatalog {
             }
         }
         throw new SQLException("Retrieving generated id failed.");
->>>>>>> origin/flickr_crawler
+
     }
 }
