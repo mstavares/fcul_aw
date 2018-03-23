@@ -14,7 +14,7 @@ public class DiseaseCatalog {
 	private Connection conn;
 	
     private static final String SQL_INSERT_DISEASE = "INSERT INTO diseases (name, abstract, was_derived_from) VALUES (?, ?, ?)";
-    private static final String SQL_SELECT_ALL_DESEASES = "SELECT * FROM diseases";
+    private static final String SQL_SELECT_ALL_DISEASES = "SELECT * FROM diseases";
     private static final String SQL_SELECT_SINGLE_DISEASE = "SELECT * FROM diseases WHERE name = ?";
     private static final String SQL_INSERT_TWEET = "INSERT INTO tweets (url, text) VALUES (?, ?)";
     private static final String SQL_INSERT_TWEET_DISEASE_LINKING = "INSERT INTO diseases_tweets (id_diseases, id_tweets) VALUES (?, ?)";
@@ -54,10 +54,15 @@ public class DiseaseCatalog {
     }
 	
 	
-	public List<Disease> getDiseases() throws SQLException {
+	public List<Disease> getDiseases(int limit) throws SQLException {
         ArrayList<Disease> results = new ArrayList<>();
         Statement stmt = conn.createStatement();
-        try (ResultSet result = stmt.executeQuery(SQL_SELECT_ALL_DESEASES)) {
+        String query = SQL_SELECT_ALL_DISEASES;
+        
+        if (limit > 0)
+        	query += " LIMIT " + limit;
+        
+        try (ResultSet result = stmt.executeQuery(query)) {
             while (result.next()) {
                 int id = result.getInt("id");
                 String name = result.getString("name");
@@ -73,7 +78,6 @@ public class DiseaseCatalog {
 	public Disease getDisease(String searchTerm) throws SQLException {
         Disease disease = null;
         
-        Statement stmt = conn.createStatement();
         PreparedStatement statement = conn.prepareStatement(SQL_SELECT_SINGLE_DISEASE);
         statement.setString(1, searchTerm);
         

@@ -18,22 +18,24 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
-<<<<<<< 57b23a1cea3abe798346079a199acc94091fee34
-import java.sql.Timestamp;
-=======
 import java.util.ArrayList;
->>>>>>> improved main, optional args
 import java.util.List;
 import java.util.Properties;
 
 public class Main {
-    //private static final Logger logger = LoggerFactory.getLogger(Main.class);
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
     private static final String CONFIG_FILE_NAME = "config.properties";
 
 	public static void main(String[] args) {
 		
 		boolean forceUpdate = forceUpdate(args);
 		String singleDisease = getSingleDisease(args);
+		int limit = getLimit(args);
+		
+		if (limit > 0)
+			logger.info("Only updating " + limit + " diseases.");
+		else
+			logger.info("WARNING: No diseases limit.");
 		
         MysqlDataSource dataSource = getDataSourceFromConfig(CONFIG_FILE_NAME);
         if (dataSource == null) {
@@ -47,7 +49,7 @@ public class Main {
         try(Connection conn = dataSource.getConnection()) {
             DiseaseCatalog catalog = new DiseaseCatalog(conn);
             
-            List<Disease> diseases = catalog.getDiseases();
+            List<Disease> diseases = catalog.getDiseases(limit);
             
             if (singleDisease != null) {
             	Disease d = catalog.getDisease(singleDisease);
@@ -61,9 +63,9 @@ public class Main {
             }
             
             if (forceUpdate || diseases.size() == 0) {
-                DbPediaCrawler dbpediaCrawler = new DbPediaCrawler(catalog);
+                DbPediaCrawler dbpediaCrawler = new DbPediaCrawler(catalog, limit);
                 List<Disease> temp = dbpediaCrawler.update();
-                logger.info("Added " + diseases.size() + " diseases to the database.");
+                logger.info("Added " + temp.size() + " diseases to the database.");
                 
                 if (singleDisease == null)
                 	diseases = temp;
@@ -80,17 +82,13 @@ public class Main {
             	boolean sucF = flickrCrawler.update(d);
                 String s = (sucT? "twitter, " : "")
                 	+ (sucP? "pubmed, " : "")
-                	+ (sucF? "flickr, " : "");
+                	+ (sucF? "flickr" : "");
                 logger.info("Updated " + s + " info for " + d.getName());
             }
 
         } catch (SQLException e) {
             //logger.error("Error while connecting to database: ", e);
         }
-        
-        timestamp = new Timestamp(System.currentTimeMillis());
-		long two = timestamp.getTime();
-		System.out.println(two-one);
 
     }
 
@@ -149,4 +147,27 @@ public class Main {
     }
     
     
+    private static int getLimit(String[] args) {
+    	int result = -1;
+    	boolean flag = false;
+    	
+    	for (String s: args) {
+    		if (flag) {
+    			try {
+        			result = Integer.parseInt(s);
+        			logger.info("Found limit: " + result);
+        			return result;
+    			}catch(NumberFormatException e) {
+    				return -1;
+    			}
+    		}
+    		
+    		if (s.equals("-s"))
+    			flag = true;
+    		else
+    			flag = false;
+    	}
+    	
+    	return result;
+    }
 }
