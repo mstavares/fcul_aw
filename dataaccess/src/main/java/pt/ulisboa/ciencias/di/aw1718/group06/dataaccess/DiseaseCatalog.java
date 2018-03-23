@@ -18,6 +18,10 @@ public class DiseaseCatalog {
     private static final String SQL_INSERT_TWEET = "INSERT INTO tweets (url, text) VALUES (?, ?)";
     private static final String SQL_INSERT_TWEET_DISEASE_LINKING = "INSERT INTO diseases_tweets (id_diseases, id_tweets) VALUES (?, ?)";
 
+	private static final String SQL_INSERT_PUBMED = "INSERT INTO pubmed (pubmedID, title, abstract) VALUES (?, ?, ?)";
+	private static final String SQL_INSERT_PUBMED_DISEASE_LINKING = "INSERT INTO diseases_pubmed (id_diseases, id_pubmed) VALUES (?, ?)";
+    
+
 
 	public DiseaseCatalog(Connection connection) {
 		this.conn = connection;
@@ -91,5 +95,34 @@ public class DiseaseCatalog {
             }
         }
         throw new SQLException("Retrieving generated id failed.");
+    }
+
+    public PubMed addPubMedInfo(int diseaseID, int pubmedID, String title, String abstrct) throws SQLException {
+    	PreparedStatement statement = conn.prepareStatement(SQL_INSERT_PUBMED, Statement.RETURN_GENERATED_KEYS);
+    	statement.setString(1, String.valueOf(pubmedID));
+    	statement.setString(2, title);
+    	statement.setString(3,  abstrct);
+
+    	int affected = statement.executeUpdate();
+    	if (affected == 0) {
+    		throw new SQLException("Creating entry failed, no rows affected.");
+    	}
+
+    	try (ResultSet keys = statement.getGeneratedKeys()) {
+    		if (keys.next()) {
+    			int id = keys.getInt(1);
+    			// Add entry in linking table.
+    			PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_PUBMED_DISEASE_LINKING, Statement.RETURN_GENERATED_KEYS);
+    			stmt.setInt(1, diseaseID);
+    			stmt.setInt(2, id);
+
+    			affected = stmt.executeUpdate();
+    			if (affected == 0) {
+    				throw new SQLException("Creating entry failed, no rows affected.");
+    			}
+    			return new PubMed(id, pubmedID, title, abstrct);
+    		}
+    	}
+    	throw new SQLException("Retrieving generated id failed.");
     }
 }
