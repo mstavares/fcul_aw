@@ -56,16 +56,16 @@ public class PubMedCrawler extends Crawler {
 				diseaseCatalog.addPubMedInfo(disease.getId(), id, title, abstrct);
 			}
 		} catch (ParserConfigurationException e) {
-			System.err.println("Cannot create DocumentBuilder");
-			e.printStackTrace();
+			//System.err.println("Cannot create DocumentBuilder");
+			return false;
 		} catch (IOException e) {
-			e.printStackTrace();
+			return false;
 		} catch (SAXException e) {
-			System.err.println("Error parsing xml document");
-			e.printStackTrace();
+			//System.err.println("Error parsing xml document");
+			return false;
 		} catch (SQLException e) {
-			System.err.println("Error while writing to database");
-			e.printStackTrace();
+			//System.err.println("Error while writing to database");
+			return false;
 		}
 		
 		

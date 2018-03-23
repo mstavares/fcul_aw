@@ -48,11 +48,12 @@ public class FlickrCrawler extends Crawler {
 				try {
 					diseaseCatalog.createImage(disease, photo.getUrl());
 				} catch (SQLException e) {
-					LOGGER.error("Error while writing to database: ", e);
+					//LOGGER.error("Error while writing to database: ", e);
+					return false;
 				}
 			}
 		} catch (FlickrException e) {
-			LOGGER.error("Error while looking up results for \"" + disease.getName() + "\"", e);
+			//LOGGER.error("Error while looking up results for \"" + disease.getName() + "\"", e);
 			return false;
 		}
 

@@ -34,15 +34,16 @@ public class TwitterCrawler extends Crawler {
         try {
             QueryResult result = this.twitter.search(query);
             for (Status status : result.getTweets()) {
-                logger.info("@" + status.getUser().getScreenName() + ":" + status.getText());
+                //logger.info("@" + status.getUser().getScreenName() + ":" + status.getText());
                 try {
                     this.diseaseCatalog.createTweet(disease, status.getId(), status.getText());
                 } catch (SQLException e) {
-                    logger.error("Error while writing to database: ", e);
+                    //logger.error("Error while writing to database: ", e);
+                	return false;
                 }
             }
         } catch (TwitterException e) {
-            logger.error("Error while looking up results for \"" + disease.getName() + "\"", e);
+            //logger.error("Error while looking up results for \"" + disease.getName() + "\"", e);
             return false;
         }
         return true;
