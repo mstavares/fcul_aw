@@ -1,11 +1,13 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.crawler.startup;
 
+import com.flickr4java.flickr.Flickr;
 import com.mysql.cj.jdbc.MysqlDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.crawlers.DbPediaCrawler;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.crawlers.PubMedCrawler;
+import pt.ulisboa.ciencias.di.aw1718.group06.crawler.crawlers.FlickrCrawler;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.crawlers.TwitterCrawler;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
@@ -42,10 +44,12 @@ public class Main {
             
             TwitterCrawler twitterCrawler = new TwitterCrawler(catalog, twitter);
             PubMedCrawler pubmedCrawler = new PubMedCrawler(catalog);
+            FlickrCrawler flickrCrawler = new FlickrCrawler(catalog);
             
             for (Disease d : diseases) {
             	twitterCrawler.update(d);
-            	pubmedCrawler.update(d);
+                pubmedCrawler.update(d);
+                flickrCrawler.update(d);
                 //logger.info("{}: {} (from: {}) - {}", d.getId(), d.getName(), d.getDescription(), d.getDerivedFrom());
             }
 
