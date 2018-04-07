@@ -13,6 +13,7 @@ public class PubMed {
 
 	protected PubMed(int id, int pubMedID, String title, String description) {
 		this.id = id;
+		this.pubMedID = pubMedID;
 		this.title = title;
 		this.description = description;
 	}
