@@ -29,7 +29,7 @@ public class PubMedCrawler extends Crawler {
 	private final String TITLE_TAG_NAME = "ArticleTitle";
 	private final String ABSTRACT_TAG_NAME = "AbstractText";
 	
-	private final int RETURN_LIMIT = 3;
+	private final int RETURN_LIMIT = 20;
 	
 	public PubMedCrawler(DiseaseCatalog diseaseCatalog) {
 		super(diseaseCatalog);
@@ -53,7 +53,8 @@ public class PubMedCrawler extends Crawler {
 				Document doc = getDocument(req);
 				String title = getTagValue(doc, TITLE_TAG_NAME);
 				String abstrct = getTagValue(doc, ABSTRACT_TAG_NAME);
-				diseaseCatalog.addPubMedInfo(disease.getId(), id, title, abstrct);
+				if(abstrct != null)
+					diseaseCatalog.addPubMedInfo(disease.getId(), id, title, abstrct);
 			}
 		} catch (ParserConfigurationException e) {
 			//System.err.println("Cannot create DocumentBuilder");
@@ -66,19 +67,14 @@ public class PubMedCrawler extends Crawler {
 		} catch (SQLException e) {
 			//System.err.println("Error while writing to database");
 			return false;
-		}
-		
-		
+		}	
 		return true;
 	}
 	
 	private String getTagValue(Document document, String tagname) {	
 		String value = null;
-
 		NodeList titleNode = document.getElementsByTagName(tagname);
-		if(titleNode.getLength() == 0) {
-			value = "Abstract not available";
-		} else {
+		if(titleNode.getLength() != 0) {
 			StringBuilder sb = new StringBuilder();
 			for(int i = 0; i < titleNode.getLength(); i++) {
 				sb.append(titleNode.item(i).getTextContent());
@@ -98,5 +94,4 @@ public class PubMedCrawler extends Crawler {
 		Document document = builder.parse(is);
 		return document;
 	}
-
 }
