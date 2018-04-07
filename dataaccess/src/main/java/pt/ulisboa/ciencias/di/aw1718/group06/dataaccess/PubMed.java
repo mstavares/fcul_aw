@@ -11,7 +11,7 @@ public class PubMed {
 	private String description;
 
 
-	protected PubMed(int id, int pubMedID, String title, String description) {
+	public PubMed(int id, int pubMedID, String title, String description) {
 		this.id = id;
 		this.pubMedID = pubMedID;
 		this.title = title;
