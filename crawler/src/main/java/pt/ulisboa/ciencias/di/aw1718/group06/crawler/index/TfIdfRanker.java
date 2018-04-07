@@ -21,14 +21,16 @@ public class TfIdfRanker implements ArticleRanker {
     public List<Pair<Integer, IndexRank>> rank(int diseaseId, List<Pair<PubMed, List<Integer>>> pubMedsAnnotated) {
 
         String name = this.diseases.get(diseaseId).getName();
-        return pubMedsAnnotated.stream()
+        List<PubMed> relevant = pubMedsAnnotated.stream()
             .filter(pma -> pma.getValue().contains(diseaseId))
-            .map(pma -> {
-                PubMed pm = pma.getKey();
+            .map(Pair::getKey)
+            .collect(Collectors.toList());
+        double idf = Math.log(pubMedsAnnotated.size() / (double) relevant.size());
+        return relevant.stream()
+            .map(pm -> {
                 double tf = computeTermFrequency(pm.getDescription(), name);
-                return new Pair<>(pm.getId(), (IndexRank) () -> tf);
+                return new Pair<>(pm.getId(), (IndexRank) () -> tf * idf);
             }).collect(Collectors.toList());
-        // TODO: Implement IDF and combine.
     }
 
     private static double computeTermFrequency(String description, String name) {
@@ -44,7 +46,12 @@ public class TfIdfRanker implements ArticleRanker {
             }
         }
         int numOfTokens = new StringTokenizer(description).countTokens();
-        // TODO: take care of multi-word names!
+        int nameTokens = new StringTokenizer(name).countTokens();
+        if (nameTokens > 1) {
+            // We want to count the whole phrase as one token, so the excessive amount of tokens
+            // counted in description is subtracted.
+            numOfTokens -= occurrences * (nameTokens - 1);
+        }
         return (double) occurrences / numOfTokens;
     }
 }
