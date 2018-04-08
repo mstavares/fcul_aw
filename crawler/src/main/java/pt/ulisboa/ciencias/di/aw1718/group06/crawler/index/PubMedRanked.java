@@ -28,11 +28,11 @@ public class PubMedRanked {
         if (o == null || getClass() != o.getClass()) return false;
         PubMedRanked that = (PubMedRanked) o;
         return Objects.equals(pubMed, that.pubMed) &&
-            Objects.equals(rank.get(), that.rank.get());
+            Objects.equals(rank, that.rank);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(pubMed, rank.get());
+        return Objects.hash(pubMed, rank);
     }
 }

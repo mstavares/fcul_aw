@@ -29,18 +29,20 @@ public class TfIdfRanker implements ArticleRanker {
         return relevant.stream()
             .map(pm -> {
                 double tf = computeTermFrequency(pm.getDescription(), name);
-                return new Pair<>(pm.getId(), (IndexRank) () -> tf * idf);
+                return new Pair<>(pm.getId(), (IndexRank) new NumericalRank(tf * idf));
             }).collect(Collectors.toList());
     }
 
-    private static double computeTermFrequency(String description, String name) {
+    private double computeTermFrequency(String description, String name) {
         // for relevant articles, count:
         // - number of occurrences of the term
         // - number of words in the text
         int foundIdx = 0;
         int occurrences = 0;
+        name = name.toLowerCase();
+        description = description.toLowerCase();
         while (foundIdx != -1) {
-            foundIdx = description.indexOf(name, foundIdx);
+            foundIdx = description.indexOf(name, foundIdx + 1);
             if (foundIdx != -1) {
                 occurrences++;
             }
