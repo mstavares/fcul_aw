@@ -15,7 +15,6 @@ public class TfIdfRankerTest {
 
     @Test
     public void testTfIdfRank() {
-
         Disease d1 = new Disease(1, "dis1", "description 1", "derived from 1");
         Disease d2 = new Disease(2, "dis2", "description 2", "derived from 2");
 
@@ -42,7 +41,6 @@ public class TfIdfRankerTest {
         assertThat(d1Rank.get(0).getValue().get()).isEqualTo(pm1d1rank.get());
         assertThat(d1Rank.get(1).getKey()).isEqualTo(pm2.getId());
         assertThat(d1Rank.get(1).getValue().get()).isEqualTo(pm2d1rank.get());
-
 
         List<Pair<Integer, IndexRank>> d2Rank = ranker.rank(d2.getId(), ImmutableList.of(pma1, pma2, pma3));
         // TF(d2, pm1) = 1/10 = 0.1

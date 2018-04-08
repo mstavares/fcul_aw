@@ -31,16 +31,13 @@ public class IndexTest {
         Pair<PubMed, List<Integer>> pma2 = new Pair<>(pm2, ImmutableList.of(d1.getId()));
         Pair<PubMed, List<Integer>> pma3 = new Pair<>(pm3, ImmutableList.of(d2.getId()));
 
-        IndexRank rankPma1 = new NumericalRank(0.5);
-        IndexRank rankPma2 = new NumericalRank(0.2);
-        PubMedRanked ranked1 = new PubMedRanked(pm1, rankPma1);
-        PubMedRanked ranked2 = new PubMedRanked(pm2, rankPma2);
-
+        PubMedRanked ranked1 = new PubMedRanked(pm1, new NumericalRank(0.5));
+        PubMedRanked ranked2 = new PubMedRanked(pm2, new NumericalRank(0.2));
         ArticleRanker rankerMock = mock(ArticleRanker.class);
         when(rankerMock.rank(Matchers.eq(d1.getId()), Matchers.any()))
             .thenReturn(ImmutableList.of(
-                new Pair<>(pm1.getId(), rankPma1),
-                new Pair<>(pm2.getId(), rankPma2)));
+                new Pair<>(ranked1.getPubMed().getId(), ranked1.getRank()),
+                new Pair<>(ranked2.getPubMed().getId(), ranked2.getRank())));
 
         Index index = new Index(diseases, ImmutableList.of(pma1, pma2, pma3), rankerMock);
 
