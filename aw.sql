@@ -42,7 +42,8 @@ CREATE TABLE diseases_images (
 CREATE TABLE diseases_tweets (
 	id_diseases INT NOT NULL,
 	id_tweets INT NOT NULL,
-	black_listed BOOLEAN DEFAULT false,
+	relevance INT DEFAULT 1,
+	rank INT DEFAULT 0,
 	PRIMARY KEY (id_diseases, id_tweets),
 	FOREIGN KEY (id_diseases) REFERENCES diseases(id) ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY (id_tweets) REFERENCES tweets(id) ON UPDATE CASCADE ON DELETE CASCADE
@@ -51,6 +52,8 @@ CREATE TABLE diseases_tweets (
 CREATE TABLE diseases_pubmed (
 	id_diseases INT NOT NULL,
 	id_pubmed INT NOT NULL,
+	relevance INT DEFAULT 1,
+	rank INT DEFAULT 0,
 	PRIMARY KEY (id_diseases, id_pubmed),
 	FOREIGN KEY (id_diseases) REFERENCES diseases(id) ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY (id_pubmed) REFERENCES pubmed(id) ON UPDATE CASCADE ON DELETE CASCADE
