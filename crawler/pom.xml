@@ -24,10 +24,26 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
+      <version>4.12</version>
       <scope>test</scope>
     </dependency>
-    
+    <!-- https://mvnrepository.com/artifact/org.mockito/mockito-all -->
+    <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-all</artifactId>
+        <version>1.10.19</version>
+        <scope>test</scope>
+    </dependency>
+
+
+      <!-- https://mvnrepository.com/artifact/com.google.truth/truth -->
+    <dependency>
+        <groupId>com.google.truth</groupId>
+        <artifactId>truth</artifactId>
+        <version>0.40</version>
+        <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>pt.ulisboa.ciencias.di.aw1718.group06</groupId>
       <artifactId>dataaccess</artifactId>
@@ -69,7 +85,14 @@
       <artifactId>gson</artifactId>
       <version>2.8.2</version>
     </dependency>
-    
+
+    <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>24.1-jre</version>
+    </dependency>
+
   </dependencies>
   
     <build>
