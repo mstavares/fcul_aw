@@ -1,5 +1,11 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.dataaccess;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -14,6 +20,8 @@ public class DiseaseCatalog {
 
 	private Connection conn;
 	
+	private static final String SQL_SELECT_ALL_PUBMEDS = "SELECT * FROM pubmed";
+	
     private static final String SQL_INSERT_DISEASE = "INSERT INTO diseases (name, abstract, was_derived_from) VALUES (?, ?, ?)";
     private static final String SQL_SELECT_ALL_DISEASES = "SELECT * FROM diseases";
     private static final String SQL_SELECT_SINGLE_DISEASE = "SELECT * FROM diseases WHERE name = ?";
@@ -27,6 +35,10 @@ public class DiseaseCatalog {
 
     private static final String SQL_INSERT_IMAGE = "INSERT INTO images (url) VALUES (?)";
     private static final String SQL_INSERT_IMAGE_DISEASE_LINKING = "INSERT INTO diseases_images (id_diseases, id_images) VALUES (?, ?)";
+
+	private static final String SQL_GET_ID_DISEASE_BY_NAME = "SELECT id FROM diseases WHERE name=?";
+
+	private static final String SQL_GET_PAIR_DISEASEID_PUBMEDID = "SELECT * FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
     
 	public DiseaseCatalog(Connection connection) {
 		this.conn = connection;
@@ -131,7 +143,7 @@ public class DiseaseCatalog {
     	statement.setString(1, String.valueOf(pubmedID));
     	try(ResultSet keys = statement.executeQuery()){
     		boolean exists = keys.next();
-    		//int count = keys.getInt(1);
+    		
     		if(exists) {
     			//pubmed article already exists in table pubmed
     			//add linking to this disease
@@ -163,16 +175,26 @@ public class DiseaseCatalog {
     	}  	
     } 
     
-    private void addPubMedDiseaseLink(int diseaseID, int id, int originalDiseaseID) throws SQLException {
-    	PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_PUBMED_DISEASE_LINKING, Statement.RETURN_GENERATED_KEYS);
-		stmt.setInt(1, diseaseID);
-		stmt.setInt(2, id);
-		stmt.setInt(3, originalDiseaseID);
+    public void addPubMedDiseaseLink(int diseaseID, int id, int originalDiseaseID) throws SQLException {
+    	
+    	PreparedStatement stmt = conn.prepareStatement(SQL_GET_PAIR_DISEASEID_PUBMEDID, Statement.RETURN_GENERATED_KEYS);
+    	stmt.setInt(1, diseaseID);
+    	stmt.setInt(2, id);
+    	boolean exists = false;
+    	try(ResultSet keys = stmt.executeQuery()){
+    		exists = keys.next();
+    	}
+    	if(!exists) {
+    		stmt = conn.prepareStatement(SQL_INSERT_PUBMED_DISEASE_LINKING, Statement.RETURN_GENERATED_KEYS);
+    		stmt.setInt(1, diseaseID);
+    		stmt.setInt(2, id);
+    		stmt.setInt(3, originalDiseaseID);
 
-		int affected = stmt.executeUpdate();
-		if (affected == 0) {
-			throw new SQLException("Creating entry failed, no rows affected.");
-		}
+    		int affected = stmt.executeUpdate();
+    		if (affected == 0) {
+    			throw new SQLException("Creating entry failed, no rows affected.");
+    		}
+    	}
 	}
 
 	public Image createImage(Disease disease, String url) throws SQLException {
@@ -201,4 +223,31 @@ public class DiseaseCatalog {
         }
         throw new SQLException("Retrieving generated id failed.");
     }
+
+	public List<PubMed> getAllPubMed() throws SQLException {
+		ArrayList<PubMed> pubmeds = new ArrayList<>();
+		Statement stmt = conn.createStatement();
+		try(ResultSet result = stmt.executeQuery(SQL_SELECT_ALL_PUBMEDS)){
+			while(result.next()) {
+				int id = result.getInt("id");
+				int pubmedid = result.getInt("pubmedID");
+				String title = result.getString("title");
+				String abstrct = result.getString("abstract");
+				pubmeds.add(new PubMed(id, pubmedid, title, abstrct));
+			}
+		}
+		return pubmeds;
+	}
+
+	public int getDiseaseID(String diseaseName) throws SQLException {
+		PreparedStatement statement = conn.prepareStatement(SQL_GET_ID_DISEASE_BY_NAME, Statement.RETURN_GENERATED_KEYS);
+    	statement.setString(1, diseaseName);
+    	int id = -1;
+    	try(ResultSet keys = statement.executeQuery()){
+    		if(keys.next())
+    			id = keys.getInt(1);
+    	}
+		return id;
+	}
+	
 }

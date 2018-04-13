@@ -62,7 +62,7 @@ public class PubMedCrawler extends Crawler {
 				String title = getTagValue(doc, TITLE_TAG_NAME);
 				String abstrct = getTagValue(doc, ABSTRACT_TAG_NAME);
 				String date = getDate(doc);
-				
+
 				SimpleDateFormat format;
 				if (date.length() > 7)
 					format = new SimpleDateFormat("yyyyMMMdd");
