@@ -11,15 +11,21 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.ImmutableMap;
+import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
 
+import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.CompoundRanker;
+import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.Index;
+import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.PubMedRanked;
+import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.TfIdfRanker;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.PubMed;
 
@@ -40,21 +46,52 @@ public class MainRanking {
 			DiseaseCatalog catalog = new DiseaseCatalog(conn);
 
 			List<PubMed> pubmeds = catalog.getAllPubMed();
-			for(PubMed p : pubmeds) {
+            List<Pair<PubMed, List<Integer>>> pubMedsAnnotated = new ArrayList<>();
+
+            for(PubMed p : pubmeds) {
 				logger.info(""+p.getId());
 				List<String> relatedDiseases = getAnnotationsFromAbstract(p.getDescription());
 				if(relatedDiseases != null) {
-					for(String diseaseName : relatedDiseases) {
+                    List<Integer> disIds = new ArrayList<>();
+
+                    for(String diseaseName : relatedDiseases) {
 						logger.info(diseaseName);
 						int diseaseId = catalog.getDiseaseID(diseaseName);
-						if(diseaseId != -1)
-							catalog.addPubMedDiseaseLink(diseaseId, p.getId(), diseaseId);
+						if(diseaseId != -1) {
+                            catalog.addPubMedDiseaseLink(diseaseId, p.getId(), diseaseId);
+                            disIds.add(diseaseId);
+                        }
 					}
-					System.out.println("==================================================================");
+					pubMedsAnnotated.add(new Pair<>(p, disIds));
 				}
 			}
 
-		} catch (SQLException e) {
+            List<Disease> diseases = catalog.getDiseases(0);
+            Map<Integer, Disease> diseaseMap = diseases.stream()
+                .collect(Collectors.toMap(Disease::getId, d -> d));
+
+            TfIdfRanker tfIdfRanker = new TfIdfRanker(diseaseMap);
+//          DiShInRanker diShInRanker = new DiShInRanker(diseaseMap);
+
+            CompoundRanker ranker = new CompoundRanker(ImmutableMap.of(
+//              diShInRanker, 0.3,
+//              tfIdfRanker, 0.5,
+//              feedbackRanker, 0.2,
+                tfIdfRanker, 1.0
+            ));
+
+            Index index = new Index(diseaseMap, pubMedsAnnotated, ranker);
+            index.build(pubMedsAnnotated);
+
+            for (Disease disease : diseases) {
+                List<PubMedRanked> articles = index.getArticlesFor(disease.getId());
+
+                for (PubMedRanked article : articles) {
+                    catalog.updatePubMedRank(disease.getId(), article.getPubMed().getId(), article.getRank().get());
+                }
+            }
+
+        } catch (SQLException e) {
 			//e.printStackTrace();
 		} 
 
