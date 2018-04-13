@@ -10,11 +10,14 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import pt.ulisboa.ciencias.di.aw1718.group06.crawler.startup.Main;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
 
@@ -22,7 +25,7 @@ public class PubMedCrawler extends Crawler {
 	
 	private final String BASE_URL_SEARCH_IDS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmax=%d&retmode=xml&term=%s";
 	private final String BASE_URL_ARTICLE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=text&rettype=xml&id=%d";
-	
+	private static final Logger logger = LoggerFactory.getLogger(PubMedCrawler.class);
 	//TODO we will need this eventually private final String BASE_URL_PUBMED = "https://www.ncbi.nlm.nih.gov/pubmed/%d";
 
 	private final String ID_TAG_NAME = "Id";
@@ -46,6 +49,7 @@ public class PubMedCrawler extends Crawler {
 			Document document = getDocument(requestURL);
 			
 			NodeList ids = document.getElementsByTagName(ID_TAG_NAME);
+			
 			for(int i=0; i<ids.getLength(); i++){
 				Node node = ids.item(i);
 				int id = Integer.parseInt(node.getTextContent());
@@ -53,8 +57,10 @@ public class PubMedCrawler extends Crawler {
 				Document doc = getDocument(req);
 				String title = getTagValue(doc, TITLE_TAG_NAME);
 				String abstrct = getTagValue(doc, ABSTRACT_TAG_NAME);
-				if(abstrct != null)
+				if(abstrct != null) {
 					diseaseCatalog.addPubMedInfo(disease.getId(), id, title, abstrct);
+				}
+					
 			}
 		} catch (ParserConfigurationException e) {
 			//System.err.println("Cannot create DocumentBuilder");

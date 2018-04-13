@@ -21,10 +21,12 @@ public class DiseaseCatalog {
 
 	private static final String SQL_INSERT_PUBMED = "INSERT INTO pubmed (pubmedID, title, abstract) VALUES (?, ?, ?)";
 	private static final String SQL_INSERT_PUBMED_DISEASE_LINKING = "INSERT INTO diseases_pubmed (id_diseases, id_pubmed) VALUES (?, ?)";
+	private static final String SQL_GET_PUBMED_COUNT_BY_PUBMEDID = "SELECT COUNT(*) FROM pubmed WHERE pubmedID = ?";
+	private static final String SQL_GET_ID_PUBMED_BY_PUBMEDID = "SELECT id FROM pubmed WHERE pubmedID = ?";
 
     private static final String SQL_INSERT_IMAGE = "INSERT INTO images (url) VALUES (?)";
     private static final String SQL_INSERT_IMAGE_DISEASE_LINKING = "INSERT INTO diseases_images (id_diseases, id_images) VALUES (?, ?)";
-
+    
 	public DiseaseCatalog(Connection connection) {
 		this.conn = connection;
 	}
@@ -74,7 +76,6 @@ public class DiseaseCatalog {
 		return results;
 	}
 	
-	
 	public Disease getDisease(String searchTerm) throws SQLException {
         Disease disease = null;
         
@@ -93,10 +94,8 @@ public class DiseaseCatalog {
 		return disease;
 	}
 	
-	
     public Tweet createTweet(Disease disease, long tweetId, String text) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(SQL_INSERT_TWEET, Statement.RETURN_GENERATED_KEYS);
-        // TODO: change from URL to twitterID.
         statement.setString(1, String.valueOf(tweetId));
         statement.setString(2, text);
 
@@ -123,38 +122,55 @@ public class DiseaseCatalog {
         throw new SQLException("Retrieving generated id failed.");
     }
 
-    
     public PubMed addPubMedInfo(int diseaseID, int pubmedID, String title, String abstrct) throws SQLException {
-    	PreparedStatement statement = conn.prepareStatement(SQL_INSERT_PUBMED, Statement.RETURN_GENERATED_KEYS);
+    	
+    	PreparedStatement statement = conn.prepareStatement(SQL_GET_ID_PUBMED_BY_PUBMEDID, Statement.RETURN_GENERATED_KEYS);
     	statement.setString(1, String.valueOf(pubmedID));
-    	statement.setString(2, title);
-    	statement.setString(3,  abstrct);
-
-    	int affected = statement.executeUpdate();
-    	if (affected == 0) {
-    		throw new SQLException("Creating entry failed, no rows affected.");
-    	}
-
-    	try (ResultSet keys = statement.getGeneratedKeys()) {
-    		if (keys.next()) {
-    			int id = keys.getInt(1);
-    			// Add entry in linking table.
-    			PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_PUBMED_DISEASE_LINKING, Statement.RETURN_GENERATED_KEYS);
-    			stmt.setInt(1, diseaseID);
-    			stmt.setInt(2, id);
-
-    			affected = stmt.executeUpdate();
-    			if (affected == 0) {
-    				throw new SQLException("Creating entry failed, no rows affected.");
-    			}
+    	try(ResultSet keys = statement.executeQuery()){
+    		boolean exists = keys.next();
+    		//int count = keys.getInt(1);
+    		if(exists) {
+    			//pubmed article already exists in table pubmed
+    			//add linking to this disease
+    			int id = keys.getInt("id");
+    			addPubMedDiseaseLink(diseaseID, id);
     			return new PubMed(id, pubmedID, title, abstrct);
+    		} else {
+    			statement = conn.prepareStatement(SQL_INSERT_PUBMED, Statement.RETURN_GENERATED_KEYS);
+    	    	statement.setString(1, String.valueOf(pubmedID));
+    	    	statement.setString(2, title);
+    	    	statement.setString(3,  abstrct);
+
+    	    	int affected = statement.executeUpdate();
+    	    	if (affected == 0) {
+    	    		throw new SQLException("Creating entry failed, no rows affected.");
+    	    	}
+
+    	    	try (ResultSet kys = statement.getGeneratedKeys()) {
+    	    		if (kys.next()) {
+    	    			int id = kys.getInt(1);
+    	    			// Add entry in linking table.
+    	    			addPubMedDiseaseLink(diseaseID, id);
+    	    			return new PubMed(id, pubmedID, title, abstrct);
+    	    		}
+    	    	}
+    	    	throw new SQLException("Retrieving generated id failed.");
     		}
-    	}
-    	throw new SQLException("Retrieving generated id failed.");
-    }
+    	}  	
+    } 
     
-    
-    public Image createImage(Disease disease, String url) throws SQLException {
+    private void addPubMedDiseaseLink(int diseaseID, int id) throws SQLException {
+    	PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_PUBMED_DISEASE_LINKING, Statement.RETURN_GENERATED_KEYS);
+		stmt.setInt(1, diseaseID);
+		stmt.setInt(2, id);
+
+		int affected = stmt.executeUpdate();
+		if (affected == 0) {
+			throw new SQLException("Creating entry failed, no rows affected.");
+		}
+	}
+
+	public Image createImage(Disease disease, String url) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(SQL_INSERT_IMAGE, Statement.RETURN_GENERATED_KEYS);
         statement.setString(1, url);
 

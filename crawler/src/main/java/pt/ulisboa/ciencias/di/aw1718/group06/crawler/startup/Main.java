@@ -122,27 +122,22 @@ public class Main {
     			logger.info("Force updating diseases.");
     			return true;
     		}
-    			
-    	
     	return false;
     }
     
     
     private static String getSingleDisease(String[] args) {
-    	boolean flag = false;
-    	
+    	boolean flag = false;	
     	for (String s: args) {
     		if (flag) {
     			logger.info("Updating single diseas: " + s);
     			return s;
-    		}
-    		
+    		}		
     		if (s.equals("-d"))
     			flag = true;
     		else
     			flag = false;
-    	}
-    	
+    	}	
     	return null;
     }
     
@@ -150,7 +145,6 @@ public class Main {
     private static int getLimit(String[] args) {
     	int result = -1;
     	boolean flag = false;
-    	
     	for (String s: args) {
     		if (flag) {
     			try {
@@ -160,14 +154,12 @@ public class Main {
     			}catch(NumberFormatException e) {
     				return -1;
     			}
-    		}
-    		
+    		}	
     		if (s.equals("-s"))
     			flag = true;
     		else
     			flag = false;
-    	}
-    	
+    	}	
     	return result;
     }
 }
