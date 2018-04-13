@@ -20,6 +20,7 @@ CREATE TABLE tweets (
 	id INT NOT NULL AUTO_INCREMENT,
 	url VARCHAR(255) UNIQUE NOT NULL,
 	text VARCHAR(255) NOT NULL,
+	pub_date DATE, 
 	PRIMARY KEY (id)
 )ENGINE=InnoDB;
 
@@ -28,6 +29,7 @@ CREATE TABLE pubmed (
 	pubmedID INT UNIQUE NOT NULL,
 	title VARCHAR(255) NOT NULL,
 	abstract MEDIUMTEXT,
+	pub_date DATE, 
 	PRIMARY KEY (id)
 )ENGINE=InnoDB;
 
@@ -46,7 +48,6 @@ CREATE TABLE diseases_tweets (
 	id_original_disease INT NOT NULL,
 	relevance INT DEFAULT 1,
 	rank INT DEFAULT 0,
-	pub_date DATE, 
 	PRIMARY KEY (id_diseases, id_tweets),
 	FOREIGN KEY (id_original_disease) REFERENCES diseases(id) ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY (id_diseases) REFERENCES diseases(id) ON UPDATE CASCADE ON DELETE CASCADE,
@@ -59,7 +60,6 @@ CREATE TABLE diseases_pubmed (
 	id_original_disease INT NOT NULL,
 	relevance INT DEFAULT 1,
 	rank INT DEFAULT 0,
-	pub_date DATE, 
 	PRIMARY KEY (id_diseases, id_pubmed),
 	FOREIGN KEY (id_original_disease) REFERENCES diseases(id) ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY (id_diseases) REFERENCES diseases(id) ON UPDATE CASCADE ON DELETE CASCADE,
