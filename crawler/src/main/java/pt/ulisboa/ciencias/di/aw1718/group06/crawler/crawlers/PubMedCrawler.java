@@ -66,14 +66,20 @@ public class PubMedCrawler extends Crawler {
 				SimpleDateFormat format;
 				if (date.length() > 7)
 					format = new SimpleDateFormat("yyyyMMMdd");
-				else
+				else if (date.length() > 6)
 					format = new SimpleDateFormat("yyyyMMM");
+				else if (date.length() > 3)
+					format = new SimpleDateFormat("yyyyMM");
+				else
+					format = new SimpleDateFormat("yyyy");
 				
 				Date dt;
 				try {
 					dt = format.parse(date);
 				} catch (ParseException e) {
-					dt = new Date();
+					dt = new Date(0);
+					logger.error("Pubmed date failed: " + date);
+					//e.printStackTrace();
 				}
 				if(abstrct != null) {
 					diseaseCatalog.addPubMedInfo(disease.getId(), id, title, abstrct, new java.sql.Date(dt.getTime()));
