@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Date;
+import java.util.Locale;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -64,14 +65,16 @@ public class PubMedCrawler extends Crawler {
 				String date = getDate(doc);
 
 				SimpleDateFormat format;
-				if (date.length() > 7)
-					format = new SimpleDateFormat("yyyyMMMdd");
+				if (date.length() > 8)
+					format = new SimpleDateFormat("yyyyMMMdd", new Locale("EN"));
+				else if (date.length() > 7)
+					format = new SimpleDateFormat("yyyyMMdd", new Locale("EN"));
 				else if (date.length() > 6)
-					format = new SimpleDateFormat("yyyyMMM");
-				else if (date.length() > 3)
-					format = new SimpleDateFormat("yyyyMM");
+					format = new SimpleDateFormat("yyyyMMM", new Locale("EN"));
+				else if (date.length() > 4)
+					format = new SimpleDateFormat("yyyyMM", new Locale("EN"));
 				else
-					format = new SimpleDateFormat("yyyy");
+					format = new SimpleDateFormat("yyyy", new Locale("EN"));
 				
 				Date dt;
 				try {
