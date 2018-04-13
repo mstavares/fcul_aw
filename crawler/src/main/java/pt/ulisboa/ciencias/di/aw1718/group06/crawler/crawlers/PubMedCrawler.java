@@ -31,6 +31,7 @@ public class PubMedCrawler extends Crawler {
 	private final String ID_TAG_NAME = "Id";
 	private final String TITLE_TAG_NAME = "ArticleTitle";
 	private final String ABSTRACT_TAG_NAME = "AbstractText";
+	private final String PUBLISHED_DATE_TAG_NAME = "PubDate";
 	
 	private final int RETURN_LIMIT = 20;
 	
@@ -57,6 +58,7 @@ public class PubMedCrawler extends Crawler {
 				Document doc = getDocument(req);
 				String title = getTagValue(doc, TITLE_TAG_NAME);
 				String abstrct = getTagValue(doc, ABSTRACT_TAG_NAME);
+				String date = getDate(doc);
 				if(abstrct != null) {
 					diseaseCatalog.addPubMedInfo(disease.getId(), id, title, abstrct);
 				}
@@ -75,6 +77,11 @@ public class PubMedCrawler extends Crawler {
 			return false;
 		}	
 		return true;
+	}
+	
+	private String getDate(Document doc) {
+		NodeList dateNode = doc.getElementsByTagName(PUBLISHED_DATE_TAG_NAME);
+		return dateNode.item(0).getTextContent();
 	}
 	
 	private String getTagValue(Document document, String tagname) {	
