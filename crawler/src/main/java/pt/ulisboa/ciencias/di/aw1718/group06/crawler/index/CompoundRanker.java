@@ -1,37 +1,25 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.crawler.index;
 
 import com.google.common.collect.ImmutableMap;
-import javafx.util.Pair;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.PubMed;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-public class CompoundRanker implements ArticleRanker {
+public class CompoundRanker {
 
-    private final Map<ArticleRanker, Double> rankers;
+    private final Map<RankType, Double> rankers;
+    private final double WEIGHTS_SUM;
 
-    public CompoundRanker(Map<ArticleRanker, Double> weightedRankers) {
+    public CompoundRanker(Map<RankType, Double> weightedRankers) {
         this.rankers = ImmutableMap.copyOf(weightedRankers);
+        this.WEIGHTS_SUM = rankers.values().stream().mapToDouble(w -> w).sum();
     }
 
-    @Override
-    public List<Pair<Integer, IndexRank>> rank(int diseaseId, List<Pair<PubMed, List<Integer>>> pubMedsAnnotated) {
-        Map<Integer, IndexRank> combinedResults = new HashMap<>();
-        for (Map.Entry<ArticleRanker, Double> entry : rankers.entrySet()) {
-            entry.getKey().rank(diseaseId, pubMedsAnnotated)
-                .forEach(idToRank -> {
-                    IndexRank current = combinedResults.getOrDefault(idToRank.getKey(), new NumericalRank(0));
-                    double newRank = current.get() + idToRank.getValue().get() * entry.getValue();
-                    combinedResults.put(idToRank.getKey(), new NumericalRank(newRank));
-                });
-        }
-        return combinedResults.entrySet().stream()
-            .map(entry -> new Pair<>(entry.getKey(), entry.getValue()))
-            .sorted(Comparator.comparingDouble(o -> o.getValue().get()))
-            .collect(Collectors.toList());
+    public IndexRank computeRank(RankingData rd) {
+        double rank = 0;
+        rank += rd.getTfidf() * rankers.getOrDefault(RankType.TF_IDF_RANK, 0.0);
+        rank += rd.getNormalizedDate() * rankers.getOrDefault(RankType.DATE_RANK, 0.0);
+        rank += rd.getExplicitFeedback() * rankers.getOrDefault(RankType.EXPLICIT_FEEDBACK_RANK, 0.0);
+        rank += rd.getImplicitFeedback() * rankers.getOrDefault(RankType.IMPLICIT_FEEDBACK_RANK, 0.0);
+        return new NumericalRank(rank / WEIGHTS_SUM);
     }
 }

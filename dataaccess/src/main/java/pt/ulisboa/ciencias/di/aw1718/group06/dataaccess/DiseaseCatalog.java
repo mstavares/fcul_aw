@@ -29,6 +29,7 @@ public class DiseaseCatalog {
 
 	/*  PUBMED  */
 	private static final String SQL_SELECT_ALL_PUBMEDS = "SELECT * FROM pubmed";
+	private static final String SQL_SELECT_ALL_PUBMED_IDS = "SELECT id FROM pubmed";
 	private static final String SQL_SELECT_ID_BY_PUBMEDID = "SELECT id FROM pubmed WHERE pubmedID = ?";
 	private static final String SQL_INSERT_PUBMED = "INSERT INTO pubmed (pubmedID, title, abstract, pub_date, id_original_disease) VALUES (?, ?, ?, ?, ?)";
 	private static final String SQL_INSERT_PUBMED_DISEASE_LINKING = "INSERT INTO diseases_pubmed (id_diseases, id_pubmed, occurrences) VALUES (?, ?, ?)";
@@ -40,6 +41,7 @@ public class DiseaseCatalog {
 	/*  DISEASES_PUBMED  */
 	private static final String SQL_SELECT_PAIR_DISEASEID_PUBMEDID = "SELECT * FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_SELECT_PUBMED_RELATED_DISEASES = "SELECT d.name FROM diseases d, diseases_pubmed dp WHERE d.id=dp.id_diseases AND dp.id_pubmed = ?";
+	private static final String SQL_SELECT_PUBMED_RELATED_DISEASE_IDS = "SELECT id_diseases FROM diseases_pubmed WHERE id_pubmed = ?";
 	private static final String SQL_SELECT_DISEASE_OCCURRENCES_IN_PUBMED = "SELECT occurrences FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_SELECT_ALL_OCCURRENCES_IN_PUBMED = "SELECT SUM(occurrences) FROM diseases_pubmed WHERE id_pubmed = ?";
 	private static final String SQL_UPDATE_PUBMED_RANK = "UPDATE diseases_pubmed SET rank = ? WHERE id_diseases = ? AND id_pubmed = ?";
@@ -262,6 +264,18 @@ public class DiseaseCatalog {
 		}
 		return pubmeds;
 	}
+
+	public List<Integer> getAllPubMedIds() throws SQLException {
+		List<Integer> pubmeds = new ArrayList<>();
+		Statement stmt = conn.createStatement();
+		try(ResultSet result = stmt.executeQuery(SQL_SELECT_ALL_PUBMED_IDS)){
+			while(result.next()) {
+				int id = result.getInt("id");
+				pubmeds.add(id);
+			}
+		}
+		return pubmeds;
+	}
 	
 	public boolean updatePubMedRank(int diseaseId, int pubmedId, double ranking) throws SQLException {
 		PreparedStatement statement = conn.prepareStatement(SQL_UPDATE_PUBMED_RANK);
@@ -284,6 +298,19 @@ public class DiseaseCatalog {
 			while(result.next()) {
 				String name = result.getString("name");
 				diseases.add(name);
+			}
+		}
+		return diseases;
+	}
+
+	public List<Integer> getRelatedDiseaseIds(int pubMedId) throws SQLException {
+		List<Integer> diseases = new ArrayList<>();
+		PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_PUBMED_RELATED_DISEASE_IDS);
+		stmt.setInt(1, pubMedId);
+		try(ResultSet result = stmt.executeQuery()){
+			while(result.next()) {
+				int id = result.getInt("id_diseases");
+				diseases.add(id);
 			}
 		}
 		return diseases;
