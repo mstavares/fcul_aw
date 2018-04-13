@@ -36,7 +36,7 @@ public class TwitterCrawler extends Crawler {
             for (Status status : result.getTweets()) {
                 //logger.info("@" + status.getUser().getScreenName() + ":" + status.getText());
                 try {
-                    this.diseaseCatalog.createTweet(disease, status.getId(), status.getText());
+                    this.diseaseCatalog.createTweet(disease, status.getId(), status.getText(), disease.getId(), new java.sql.Date(status.getCreatedAt().getTime()));
                 } catch (SQLException e) {
                     //logger.error("Error while writing to database: ", e);
                 	return false;

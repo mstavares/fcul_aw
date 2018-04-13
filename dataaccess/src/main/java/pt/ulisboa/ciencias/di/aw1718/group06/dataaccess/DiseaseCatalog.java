@@ -1,6 +1,7 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.dataaccess;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -17,10 +18,10 @@ public class DiseaseCatalog {
     private static final String SQL_SELECT_ALL_DISEASES = "SELECT * FROM diseases";
     private static final String SQL_SELECT_SINGLE_DISEASE = "SELECT * FROM diseases WHERE name = ?";
     private static final String SQL_INSERT_TWEET = "INSERT INTO tweets (url, text) VALUES (?, ?)";
-    private static final String SQL_INSERT_TWEET_DISEASE_LINKING = "INSERT INTO diseases_tweets (id_diseases, id_tweets) VALUES (?, ?)";
+    private static final String SQL_INSERT_TWEET_DISEASE_LINKING = "INSERT INTO diseases_tweets (id_diseases, id_tweets, id_original_disease, pub_date) VALUES (?, ?, ?, ?)";
 
 	private static final String SQL_INSERT_PUBMED = "INSERT INTO pubmed (pubmedID, title, abstract) VALUES (?, ?, ?)";
-	private static final String SQL_INSERT_PUBMED_DISEASE_LINKING = "INSERT INTO diseases_pubmed (id_diseases, id_pubmed) VALUES (?, ?)";
+	private static final String SQL_INSERT_PUBMED_DISEASE_LINKING = "INSERT INTO diseases_pubmed (id_diseases, id_pubmed, id_original_disease, pub_date) VALUES (?, ?, ?, ?)";
 	private static final String SQL_GET_PUBMED_COUNT_BY_PUBMEDID = "SELECT COUNT(*) FROM pubmed WHERE pubmedID = ?";
 	private static final String SQL_GET_ID_PUBMED_BY_PUBMEDID = "SELECT id FROM pubmed WHERE pubmedID = ?";
 
@@ -94,7 +95,7 @@ public class DiseaseCatalog {
 		return disease;
 	}
 	
-    public Tweet createTweet(Disease disease, long tweetId, String text) throws SQLException {
+    public Tweet createTweet(Disease disease, long tweetId, String text, int originalDiseaseID, Date date) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(SQL_INSERT_TWEET, Statement.RETURN_GENERATED_KEYS);
         statement.setString(1, String.valueOf(tweetId));
         statement.setString(2, text);
@@ -111,6 +112,8 @@ public class DiseaseCatalog {
                 PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_TWEET_DISEASE_LINKING, Statement.RETURN_GENERATED_KEYS);
                 stmt.setInt(1, disease.getId());
                 stmt.setInt(2, id);
+        		stmt.setInt(3, originalDiseaseID);
+        		stmt.setDate(4, date);
 
                 affected = stmt.executeUpdate();
                 if (affected == 0) {
@@ -122,7 +125,7 @@ public class DiseaseCatalog {
         throw new SQLException("Retrieving generated id failed.");
     }
 
-    public PubMed addPubMedInfo(int diseaseID, int pubmedID, String title, String abstrct) throws SQLException {
+    public PubMed addPubMedInfo(int diseaseID, int pubmedID, String title, String abstrct, Date date) throws SQLException {
     	
     	PreparedStatement statement = conn.prepareStatement(SQL_GET_ID_PUBMED_BY_PUBMEDID, Statement.RETURN_GENERATED_KEYS);
     	statement.setString(1, String.valueOf(pubmedID));
@@ -133,7 +136,7 @@ public class DiseaseCatalog {
     			//pubmed article already exists in table pubmed
     			//add linking to this disease
     			int id = keys.getInt("id");
-    			addPubMedDiseaseLink(diseaseID, id);
+    			addPubMedDiseaseLink(diseaseID, id, diseaseID, date);
     			return new PubMed(id, pubmedID, title, abstrct);
     		} else {
     			statement = conn.prepareStatement(SQL_INSERT_PUBMED, Statement.RETURN_GENERATED_KEYS);
@@ -150,7 +153,7 @@ public class DiseaseCatalog {
     	    		if (kys.next()) {
     	    			int id = kys.getInt(1);
     	    			// Add entry in linking table.
-    	    			addPubMedDiseaseLink(diseaseID, id);
+    	    			addPubMedDiseaseLink(diseaseID, id, diseaseID, date);
     	    			return new PubMed(id, pubmedID, title, abstrct);
     	    		}
     	    	}
@@ -159,10 +162,12 @@ public class DiseaseCatalog {
     	}  	
     } 
     
-    private void addPubMedDiseaseLink(int diseaseID, int id) throws SQLException {
+    private void addPubMedDiseaseLink(int diseaseID, int id, int originalDiseaseID, Date date) throws SQLException {
     	PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_PUBMED_DISEASE_LINKING, Statement.RETURN_GENERATED_KEYS);
 		stmt.setInt(1, diseaseID);
 		stmt.setInt(2, id);
+		stmt.setInt(3, originalDiseaseID);
+		stmt.setDate(4, date);
 
 		int affected = stmt.executeUpdate();
 		if (affected == 0) {

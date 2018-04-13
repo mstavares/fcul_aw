@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.Date;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -59,8 +62,21 @@ public class PubMedCrawler extends Crawler {
 				String title = getTagValue(doc, TITLE_TAG_NAME);
 				String abstrct = getTagValue(doc, ABSTRACT_TAG_NAME);
 				String date = getDate(doc);
+				
+				SimpleDateFormat format;
+				if (date.length() > 7)
+					format = new SimpleDateFormat("yyyyMMMdd");
+				else
+					format = new SimpleDateFormat("yyyyMMM");
+				
+				Date dt;
+				try {
+					dt = format.parse(date);
+				} catch (ParseException e) {
+					dt = new Date();
+				}
 				if(abstrct != null) {
-					diseaseCatalog.addPubMedInfo(disease.getId(), id, title, abstrct);
+					diseaseCatalog.addPubMedInfo(disease.getId(), id, title, abstrct, new java.sql.Date(dt.getTime()));
 				}
 					
 			}
