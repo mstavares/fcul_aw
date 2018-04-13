@@ -1,11 +1,5 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.dataaccess;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -30,7 +24,7 @@ public class DiseaseCatalog {
 
 	private static final String SQL_INSERT_PUBMED = "INSERT INTO pubmed (pubmedID, title, abstract, pub_date) VALUES (?, ?, ?, ?)";
 	private static final String SQL_INSERT_PUBMED_DISEASE_LINKING = "INSERT INTO diseases_pubmed (id_diseases, id_pubmed, id_original_disease) VALUES (?, ?, ?)";
-	private static final String SQL_GET_PUBMED_COUNT_BY_PUBMEDID = "SELECT COUNT(*) FROM pubmed WHERE pubmedID = ?";
+	//private static final String SQL_GET_PUBMED_COUNT_BY_PUBMEDID = "SELECT COUNT(*) FROM pubmed WHERE pubmedID = ?";
 	private static final String SQL_GET_ID_PUBMED_BY_PUBMEDID = "SELECT id FROM pubmed WHERE pubmedID = ?";
 
     private static final String SQL_INSERT_IMAGE = "INSERT INTO images (url) VALUES (?)";
@@ -39,6 +33,10 @@ public class DiseaseCatalog {
 	private static final String SQL_GET_ID_DISEASE_BY_NAME = "SELECT id FROM diseases WHERE name=?";
 
 	private static final String SQL_GET_PAIR_DISEASEID_PUBMEDID = "SELECT * FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
+	
+	private static final String SQL_UPDATE_PUBMED_RANK = "UPDATE diseases_pubmed SET rank = ? WHERE id_diseases = ? AND id_pubmed = ?";
+	
+	private static final String SQL_UPDATE_TWEET_RANK = "UPDATE diseases_tweets SET rank = ? WHERE id_diseases = ? AND id_pubmed = ?";
     
 	public DiseaseCatalog(Connection connection) {
 		this.conn = connection;
@@ -250,4 +248,31 @@ public class DiseaseCatalog {
 		return id;
 	}
 	
+	
+	public boolean updatePubMedRank(int diseaseId, int pubmedId, double ranking) throws SQLException {
+		PreparedStatement statement = conn.prepareStatement(SQL_UPDATE_PUBMED_RANK);
+		statement.setDouble(1, ranking);
+		statement.setInt(2, diseaseId);
+		statement.setInt(3, pubmedId);
+		
+        int affected = statement.executeUpdate();
+        if (affected == 0) {
+            throw new SQLException("Updating entry failed, no rows affected.");
+        }
+		return true;
+	}
+	
+	
+	public boolean updateTweetRank(int diseaseId, int tweetId, double ranking) throws SQLException {
+		PreparedStatement statement = conn.prepareStatement(SQL_UPDATE_TWEET_RANK);
+		statement.setDouble(1, ranking);
+		statement.setInt(2, diseaseId);
+		statement.setInt(3, tweetId);
+		
+        int affected = statement.executeUpdate();
+        if (affected == 0) {
+            throw new SQLException("Updating entry failed, no rows affected.");
+        }
+		return true;
+	}
 }
