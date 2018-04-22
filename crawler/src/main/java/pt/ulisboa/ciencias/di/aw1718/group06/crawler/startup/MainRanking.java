@@ -33,7 +33,7 @@ public class MainRanking {
 	private static final Logger logger = LoggerFactory.getLogger(MainRanking.class);
 	private static final String CONFIG_FILE_NAME = "config.properties";
 
-	private final static String BASE_URL_MER = "http://labs.fc.ul.pt/mer/api.php?lexicon=disease&text=";
+	
 
 	public static void main(String[] args) throws IOException {
 
@@ -49,41 +49,35 @@ public class MainRanking {
             List<Pair<PubMed, List<Integer>>> pubMedsAnnotated = new ArrayList<>();
 
             for(PubMed p : pubmeds) {
-				logger.info(""+p.getId());
-				List<String> relatedDiseases = getAnnotationsFromAbstract(p.getDescription());
+				List<String> relatedDiseases = catalog.getRelatedDiseases(p.getId());
 				if(relatedDiseases != null) {
                     List<Integer> disIds = new ArrayList<>();
 
                     for(String diseaseName : relatedDiseases) {
-						logger.info(diseaseName);
 						int diseaseId = catalog.getDiseaseID(diseaseName);
 						if(diseaseId != -1) {
-                            catalog.addPubMedDiseaseLink(diseaseId, p.getId(), diseaseId);
                             disIds.add(diseaseId);
                         }
 					}
 					pubMedsAnnotated.add(new Pair<>(p, disIds));
 				}
 			}
-
             List<Disease> diseases = catalog.getDiseases(0);
             Map<Integer, Disease> diseaseMap = diseases.stream()
                 .collect(Collectors.toMap(Disease::getId, d -> d));
 
             TfIdfRanker tfIdfRanker = new TfIdfRanker(diseaseMap);
 //          DiShInRanker diShInRanker = new DiShInRanker(diseaseMap);
-
             CompoundRanker ranker = new CompoundRanker(ImmutableMap.of(
 //              diShInRanker, 0.3,
 //              tfIdfRanker, 0.5,
 //              feedbackRanker, 0.2,
                 tfIdfRanker, 1.0
             ));
-
             Index index = new Index(diseaseMap, pubMedsAnnotated, ranker);
             index.build(pubMedsAnnotated);
-
             for (Disease disease : diseases) {
+            	logger.info("updating ranks of disease: " + disease.getName());
                 List<PubMedRanked> articles = index.getArticlesFor(disease.getId());
 
                 for (PubMedRanked article : articles) {
@@ -92,7 +86,7 @@ public class MainRanking {
             }
 
         } catch (SQLException e) {
-			//e.printStackTrace();
+			logger.error("SQLException: " + e.getMessage());
 		} 
 
 	}
@@ -121,28 +115,7 @@ public class MainRanking {
 	}
 
 
-	private static List<String> getAnnotationsFromAbstract(String abstrct) throws MalformedURLException, UnsupportedEncodingException {
-		ArrayList<String> annotations = new ArrayList<>();
-		URL url = new URL(BASE_URL_MER + URLEncoder.encode(abstrct, "UTF-8"));
-		BufferedReader reader;
-		try{
-			InputStream is = url.openConnection().getInputStream();
-
-			reader = new BufferedReader(new InputStreamReader(is));
-			String s = "";
-			while((s = reader.readLine()) != null) {
-				String [] split = s.split("\t");
-				String diseaseName = split[split.length-1];
-				if(!annotations.contains(diseaseName))
-					annotations.add(diseaseName);
-			}
-			reader.close();
-		} catch(IOException e) {
-			return null;
-		}
-		
-		return annotations;
-	}
+	
 
 
 }

@@ -21,7 +21,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import pt.ulisboa.ciencias.di.aw1718.group06.crawler.startup.Main;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
 
@@ -37,7 +36,7 @@ public class PubMedCrawler extends Crawler {
 	private final String ABSTRACT_TAG_NAME = "AbstractText";
 	private final String PUBLISHED_DATE_TAG_NAME = "PubDate";
 	
-	private final int RETURN_LIMIT = 20;
+	private final int RETURN_LIMIT = 10;
 	
 	public PubMedCrawler(DiseaseCatalog diseaseCatalog) {
 		super(diseaseCatalog);
@@ -62,51 +61,63 @@ public class PubMedCrawler extends Crawler {
 				Document doc = getDocument(req);
 				String title = getTagValue(doc, TITLE_TAG_NAME);
 				String abstrct = getTagValue(doc, ABSTRACT_TAG_NAME);
-				String date = getDate(doc);
-
-				SimpleDateFormat format;
-				if (date.length() > 8)
-					format = new SimpleDateFormat("yyyyMMMdd", new Locale("EN"));
-				else if (date.length() > 7)
-					format = new SimpleDateFormat("yyyyMMdd", new Locale("EN"));
-				else if (date.length() > 6)
-					format = new SimpleDateFormat("yyyyMMM", new Locale("EN"));
-				else if (date.length() > 4)
-					format = new SimpleDateFormat("yyyyMM", new Locale("EN"));
-				else
-					format = new SimpleDateFormat("yyyy", new Locale("EN"));
+				String date = getDateAsString(doc);
+				Date dt = getDate(date);
 				
-				Date dt;
-				try {
-					dt = format.parse(date);
-				} catch (ParseException e) {
-					dt = new Date(0);
-					logger.error("Pubmed date failed: " + date);
-					//e.printStackTrace();
-				}
 				if(abstrct != null) {
 					diseaseCatalog.addPubMedInfo(disease.getId(), id, title, abstrct, new java.sql.Date(dt.getTime()));
 				}
 					
 			}
 		} catch (ParserConfigurationException e) {
-			//System.err.println("Cannot create DocumentBuilder");
+			logger.error( "Cannot create DocumentBuilder", e);
 			return false;
 		} catch (IOException e) {
+			logger.error( "IOException", e);
 			return false;
 		} catch (SAXException e) {
-			//System.err.println("Error parsing xml document");
+			logger.error( "Error parsing xml document", e);
 			return false;
 		} catch (SQLException e) {
-			//System.err.println("Error while writing to database");
+			logger.error( "Error writing to database", e);
 			return false;
 		}	
 		return true;
 	}
+
+
+	private Date getDate(String date) {
+		SimpleDateFormat format;
+		if (date.length() > 8)
+			format = new SimpleDateFormat("yyyyMMMdd", new Locale("EN"));
+		else if (date.length() > 7)
+			format = new SimpleDateFormat("yyyyMMdd", new Locale("EN"));
+		else if (date.length() > 6)
+			format = new SimpleDateFormat("yyyyMMM", new Locale("EN"));
+		else if (date.length() > 4)
+			format = new SimpleDateFormat("yyyyMM", new Locale("EN"));
+		else
+			format = new SimpleDateFormat("yyyy", new Locale("EN"));
+		
+		Date dt;
+		try {
+			dt = format.parse(date);
+		} catch (ParseException e) {
+			dt = new Date(0);
+			logger.error("Pubmed date failed: " + date);
+		}
+		return dt;
+	}
 	
-	private String getDate(Document doc) {
+	private String getDateAsString(Document doc) {
 		NodeList dateNode = doc.getElementsByTagName(PUBLISHED_DATE_TAG_NAME);
-		return dateNode.item(0).getTextContent();
+		String date = dateNode.item(0).getTextContent();
+		
+		if(doc.getElementsByTagName("MedlineDate").getLength() != 0) {
+			String [] stringArray = date.split("[ ,-]");
+			date = stringArray[0] + stringArray[stringArray.length-1];
+		}
+		return date;
 	}
 	
 	private String getTagValue(Document document, String tagname) {	

@@ -27,7 +27,7 @@ CREATE TABLE tweets (
 CREATE TABLE pubmed (
 	id INT NOT NULL AUTO_INCREMENT,
 	pubmedID INT UNIQUE NOT NULL,
-	title VARCHAR(255) NOT NULL,
+	title VARCHAR(1024) NOT NULL,
 	abstract MEDIUMTEXT,
 	pub_date DATE, 
 	PRIMARY KEY (id)
@@ -60,6 +60,7 @@ CREATE TABLE diseases_pubmed (
 	id_original_disease INT NOT NULL,
 	relevance INT DEFAULT 1,
 	rank DOUBLE DEFAULT 0,
+	occurrences INT NOT NULL,
 	PRIMARY KEY (id_diseases, id_pubmed),
 	FOREIGN KEY (id_original_disease) REFERENCES diseases(id) ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY (id_diseases) REFERENCES diseases(id) ON UPDATE CASCADE ON DELETE CASCADE,

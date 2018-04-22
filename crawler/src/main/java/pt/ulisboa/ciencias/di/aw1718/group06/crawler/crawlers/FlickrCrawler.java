@@ -24,7 +24,7 @@ public class FlickrCrawler extends Crawler {
 	private static final Logger LOGGER = LoggerFactory.getLogger(FlickrCrawler.class);
 	private static final String API_KEY = "80a9c08e71af8c4d5b6e9aa782c68276";
 	private static final String SECRET = "ae2f9bf1ea0a11bb";
-	private static final int NUMBER_OF_IMAGES = 5;
+	private static final int NUMBER_OF_IMAGES = 10;
 	private final String BASE_URL = "";
 	private DiseaseCatalog diseaseCatalog;
 	private Flickr flickr;
