@@ -7,6 +7,10 @@ public class Tweet {
 	private String url;
 
 	private String description;
+	
+	private int implicitFeedback;
+	
+	private int explicitFeedback;
 
 
 	public Tweet(int id, String url, String description) {

@@ -5,7 +5,10 @@ public class Image {
 	private int id;
 
 	private String url;
-
+	
+	private int implicitFeedback;
+	
+	private int explicitFeedback;
 
 	public Image(int id, String url) {
 		super();
