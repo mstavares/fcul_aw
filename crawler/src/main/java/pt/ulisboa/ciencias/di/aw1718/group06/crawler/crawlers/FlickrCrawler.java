@@ -1,23 +1,17 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.crawler.crawlers;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.flickr4java.flickr.Flickr;
 import com.flickr4java.flickr.FlickrException;
 import com.flickr4java.flickr.REST;
 import com.flickr4java.flickr.photos.Photo;
 import com.flickr4java.flickr.photos.PhotoList;
-import com.flickr4java.flickr.photos.PhotosInterface;
 import com.flickr4java.flickr.photos.SearchParameters;
-import com.flickr4java.flickr.test.TestInterface;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
 
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 public class FlickrCrawler extends Crawler {
 
