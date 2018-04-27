@@ -42,8 +42,8 @@ public class MainRanking {
 			return;
 		}
 
-		try(Connection conn = dataSource.getConnection()) {
-			DiseaseCatalog catalog = new DiseaseCatalog(conn);
+		try {
+			DiseaseCatalog catalog = new DiseaseCatalog(CONFIG_FILE_NAME);
 
 			List<PubMed> pubmeds = catalog.getAllPubMed();
             List<Pair<PubMed, List<Integer>>> pubMedsAnnotated = new ArrayList<>();

@@ -50,19 +50,20 @@ public class Main {
 			logger.info("Only updating " + limit + " diseases.");
 		else
 			logger.info("WARNING: No diseases limit.");
-		
+
+		/*
         MysqlDataSource dataSource = getDataSourceFromConfig(CONFIG_FILE_NAME);
         if (dataSource == null) {
             logger.error("Failed to get data source from config: {}", CONFIG_FILE_NAME);
             return;
         }
+        */
         
         System.setProperty("twitter4j.loggerFactory", "twitter4j.NullLoggerFactory");
         Twitter twitter = TwitterFactory.getSingleton();
 
-        try(Connection conn = dataSource.getConnection()) {
-            DiseaseCatalog catalog = new DiseaseCatalog(conn);
-            
+        try {
+            DiseaseCatalog catalog = new DiseaseCatalog(CONFIG_FILE_NAME);
             List<Disease> diseases = catalog.getDiseases(limit);
             
             if (singleDisease != null) {
@@ -207,7 +208,6 @@ public class Main {
             dataSource.setServerName(props.getProperty("db.hostname"));
             dataSource.setDatabaseName(props.getProperty("db.name"));
             dataSource.setPort(Integer.valueOf(props.getProperty("db.port")));
-
         } catch (FileNotFoundException e) {
             logger.error("Properties file not found.", e);
             return null;
@@ -215,7 +215,6 @@ public class Main {
             logger.error("Error while reading properties file.", e);
             return null;
         }
-
         return dataSource;
     }
     
