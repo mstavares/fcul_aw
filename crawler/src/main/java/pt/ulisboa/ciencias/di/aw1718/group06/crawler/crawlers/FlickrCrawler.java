@@ -8,7 +8,7 @@ import com.flickr4java.flickr.photos.PhotoList;
 import com.flickr4java.flickr.photos.SearchParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Disease;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
 
 import java.sql.SQLException;

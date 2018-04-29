@@ -17,7 +17,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Disease;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
 
 public class DbPediaCrawler extends Crawler {

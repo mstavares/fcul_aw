@@ -6,11 +6,11 @@ PREFIX dbo: <http://dbpedia.org/ontology/>
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
-SELECT ?url ?name ?abstract ?wasDerivedFrom where {
+SELECT ?url ?name ?abstract ?derivedFrom where {
  ?url a dbo:Disease;
        foaf:name ?name;
        dbo:abstract ?abstract;
-       prov:wasDerivedFrom ?wasDerivedFrom.
+       prov:derivedFrom ?derivedFrom.
        FILTER (LANG(?abstract)='en')
        FILTER (lcase(str(?name)) = "DISEASE_NAME_HERE")
 }
@@ -24,11 +24,11 @@ PREFIX dbo: <http://dbpedia.org/ontology/>
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
-SELECT ?url ?name ?abstract ?wasDerivedFrom where {
+SELECT ?url ?name ?abstract ?derivedFrom where {
  ?url a dbo:Disease;
        foaf:name ?name;
        dbo:abstract ?abstract;
-       prov:wasDerivedFrom ?wasDerivedFrom.
+       prov:derivedFrom ?derivedFrom.
        FILTER (LANG(?abstract)='en')
        FILTER (LANG(?name)='en')
 } LIMIT 10
@@ -40,11 +40,11 @@ PREFIX dbo: <http://dbpedia.org/ontology/>
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
-SELECT ?url ?name ?abstract ?wasDerivedFrom where {
+SELECT ?url ?name ?abstract ?derivedFrom where {
  ?url a dbo:Disease;
        foaf:name ?name;
        dbo:abstract ?abstract;
-       prov:wasDerivedFrom ?wasDerivedFrom.
+       prov:derivedFrom ?derivedFrom.
        FILTER (LANG(?abstract)='en')
        FILTER (LANG(?name)='en')
 }

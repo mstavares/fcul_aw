@@ -1,15 +1,8 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.crawler.startup;
 
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -25,9 +18,9 @@ import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.CompoundRanker;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.Index;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.PubMedRanked;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.TfIdfRanker;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Disease;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.PubMed;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.PubMed;
 
 public class MainRanking {
 	private static final Logger logger = LoggerFactory.getLogger(MainRanking.class);

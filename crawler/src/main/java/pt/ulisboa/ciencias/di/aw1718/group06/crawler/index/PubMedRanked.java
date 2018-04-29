@@ -1,6 +1,6 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.crawler.index;
 
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.PubMed;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.PubMed;
 
 import java.util.Objects;
 

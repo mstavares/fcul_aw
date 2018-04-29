@@ -5,8 +5,8 @@ import com.google.common.collect.ImmutableMap;
 import javafx.util.Pair;
 import org.junit.Test;
 import org.mockito.Matchers;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Disease;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.PubMed;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.PubMed;
 
 import java.util.List;
 

@@ -1,7 +1,7 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.crawler.index;
 
 import javafx.util.Pair;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.PubMed;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.PubMed;
 
 import java.util.List;
 
