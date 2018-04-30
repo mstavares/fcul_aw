@@ -6,8 +6,6 @@ public class PubMed {
 	private int pubMedId;
 	private String title;
 	private String description;
-	private int implicitFeedback;
-	private int explicitFeedback;
 
 
 	public PubMed(int id, int pubMedId, String title, String description) {
@@ -15,11 +13,6 @@ public class PubMed {
 		this.pubMedId = pubMedId;
 		this.title = title;
 		this.description = description;
-	}
-
-	public PubMed(int id, int pubMedId, String title, String description, int implicitFeedback, int explicitFeedback) {
-		this(id, pubMedId, title, description);
-		this.implicitFeedback = implicitFeedback;
 	}
 
 	public int getId() {
@@ -54,27 +47,4 @@ public class PubMed {
 		this.description = description;
 	}
 
-	public int getImplicitFeedback() {
-		return implicitFeedback;
-	}
-
-	public void incrementImplicitFeedback() {
-		implicitFeedback++;
-	}
-
-	public void decrementImplicitFeedback() {
-		implicitFeedback--;
-	}
-
-	public int getExplicitFeedback() {
-		return explicitFeedback;
-	}
-
-	public void incrementExplicitFeedback() {
-		explicitFeedback++;
-	}
-
-	public void decrementExplicitFeedback() {
-		explicitFeedback--;
-	}
 }

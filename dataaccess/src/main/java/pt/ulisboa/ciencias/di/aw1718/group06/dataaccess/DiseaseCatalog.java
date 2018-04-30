@@ -57,21 +57,21 @@ public class DiseaseCatalog {
 	private static final String SQL_INSERT_IMAGE_DISEASE_LINKING = "INSERT INTO diseases_images (id_diseases, id_images) VALUES (?, ?)";
 
 	/*  DISEASES_PUBMED  */
-	private static final String SQL_SELECT_PUBMED_FEEDBACK = "SELECT * FROM diseases_pubmed WHERE id_diseases = ? AND pubmed.id = ?;";
-	private static final String SQL_UPDATE_PUBMED_FEEDBACK = "UPDATE diseases_pubmed SET implicit_feedback = ?, explicit_feedback = ? WHERE id_diseases = ? AND pubmed.id = ?;";
+	private static final String SQL_SELECT_PUBMED_FEEDBACK = "SELECT * FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?;";
+	private static final String SQL_UPDATE_PUBMED_FEEDBACK = "UPDATE diseases_pubmed SET implicit_feedback = ?, explicit_feedback = ? WHERE id_diseases = ? AND id_pubmed = ?;";
 	private static final String SQL_SELECT_PAIR_DISEASEID_PUBMEDID = "SELECT * FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_SELECT_PUBMED_RELATED_DISEASES = "SELECT d.name FROM diseases d, diseases_pubmed dp WHERE d.id=dp.id_diseases AND dp.id_pubmed = ?";
 	private static final String SQL_UPDATE_PUBMED_RANK = "UPDATE diseases_pubmed SET rank = ? WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_UPDATE_PUBMED_OCCURRENCES = "UPDATE diseases_pubmed SET occurrences = ? WHERE id_diseases = ? AND id_pubmed = ?";
 	
 	/*  DISEASES_TWEETS */
-	private static final String SQL_SELECT_TWEET_FEEDBACK = "SELECT * FROM diseases_tweets WHERE id_diseases = ? AND tweets.id = ?;";
-	private static final String SQL_UPDATE_TWEET_FEEDBACK = "UPDATE diseases_tweets SET implicit_feedback = ?, explicit_feedback = ? WHERE id_diseases = ? AND tweets.id = ?;";
+	private static final String SQL_SELECT_TWEET_FEEDBACK = "SELECT * FROM diseases_tweets WHERE id_diseases = ? AND id_tweets = ?;";
+	private static final String SQL_UPDATE_TWEET_FEEDBACK = "UPDATE diseases_tweets SET implicit_feedback = ?, explicit_feedback = ? WHERE id_diseases = ? AND id_tweets = ?;";
 	private static final String SQL_UPDATE_TWEET_RANK = "UPDATE diseases_tweets SET rank = ? WHERE id_diseases = ? AND id_pubmed = ?";
 
 	/*  DISEASES_IMAGES */
-	private static final String SQL_SELECT_IMAGE_FEEDBACK = "SELECT * FROM diseases_images WHERE id_diseases = ? AND image.id = ?;";
-	private static final String SQL_UPDATE_IMAGE_FEEDBACK = "UPDATE diseases_images SET implicit_feedback = ?, explicit_feedback = ? WHERE id_diseases = ? AND image.id = ?;";
+	private static final String SQL_SELECT_IMAGE_FEEDBACK = "SELECT * FROM diseases_images WHERE id_diseases = ? AND id_images = ?;";
+	private static final String SQL_UPDATE_IMAGE_FEEDBACK = "UPDATE diseases_images SET implicit_feedback = ?, explicit_feedback = ? WHERE id_diseases = ? AND id_images = ?;";
 
 	public DiseaseCatalog(String configFileName) throws SQLException {
 		MysqlDataSource dataSource = getDataSourceFromConfig(configFileName);
@@ -222,10 +222,9 @@ public class DiseaseCatalog {
 				String text = result.getString("text");
 				Date pubDate = result.getDate("pub_date");
 				int idOriginalDisease = result.getInt("id_original_disease");
-				int relevance = result.getInt("relevance");
 				int implicitFeedback = result.getInt("implicit_feedback");
 				int explicitFeedback = result.getInt("explicit_feedback");
-				results.add(new FullTweet(id, url, text, pubDate, idOriginalDisease, implicitFeedback, explicitFeedback, relevance));
+				results.add(new FullTweet(id, url, text, pubDate, idOriginalDisease, implicitFeedback, explicitFeedback));
 			}
 		}
 		return results;
@@ -343,10 +342,9 @@ public class DiseaseCatalog {
 			while (result.next()) {
 				int id = result.getInt("id");
 				String url = result.getString("url");
-				boolean blackListed = result.getBoolean("black_listed");
 				int implicitFeedback = result.getInt("implicit_feedback");
 				int explicitFeedback = result.getInt("explicit_feedback");
-				results.add(new FullImage(id, url, implicitFeedback, explicitFeedback, blackListed));
+				results.add(new FullImage(id, url, implicitFeedback, explicitFeedback));
 			}
 		}
 		return results;
@@ -378,10 +376,9 @@ public class DiseaseCatalog {
 				String title = result.getString("title");
 				String description = result.getString("abstract");
 				int idOriginalDisease = result.getInt("id_original_disease");
-				int relevance = result.getInt("relevance");
 				int implicitFeedback = result.getInt("implicit_feedback");
 				int explicitFeedback = result.getInt("explicit_feedback");
-				results.add(new FullPubMed(id, pubMedId, title, description, idOriginalDisease, implicitFeedback, explicitFeedback, relevance));
+				results.add(new FullPubMed(id, pubMedId, title, description, idOriginalDisease, implicitFeedback, explicitFeedback));
 			}
 		}
 		return results;
@@ -433,30 +430,22 @@ public class DiseaseCatalog {
 		}
 	}
 
-	public boolean updatePubMeFeedback(int diseaseId, int pubMedId, Feedback.Operations operation) throws SQLException {
+	public boolean updatePubMedFeedback(int diseaseId, int pubMedId, Feedback.Operations operation) throws SQLException {
 		Feedback feedback = getFeedback(diseaseId, pubMedId, SQL_SELECT_PUBMED_FEEDBACK);
 		performFeedbackUpdate(feedback, operation);
 		return updateFeedback(feedback, SQL_UPDATE_PUBMED_FEEDBACK);
 	}
 
-	public boolean updateImageFeedback(int diseaseId, int imageId, boolean increment) throws SQLException {
-		Feedback feedback = getFeedback(diseaseId, imageId, SQL_SELECT_IMAGE_FEEDBACK);
-		if(increment) {
-			feedback.incrementImplicitFeedback();
-		} else {
-			feedback.decrementImplicitFeedback();
-		}
-		return updateFeedback(feedback, SQL_UPDATE_IMAGE_FEEDBACK);
+	public boolean updateTweetFeedback(int diseaseId, int tweetId, Feedback.Operations operation) throws SQLException {
+		Feedback feedback = getFeedback(diseaseId, tweetId, SQL_SELECT_TWEET_FEEDBACK);
+		performFeedbackUpdate(feedback, operation);
+		return updateFeedback(feedback, SQL_UPDATE_TWEET_FEEDBACK);
 	}
 
-	public boolean updateTweetFeedback(int diseaseId, int tweetId, boolean increment) throws SQLException {
-		Feedback feedback = getFeedback(diseaseId, tweetId, SQL_SELECT_TWEET_FEEDBACK);
-		if(increment) {
-			feedback.incrementImplicitFeedback();
-		} else {
-			feedback.decrementImplicitFeedback();
-		}
-		return updateFeedback(feedback, SQL_UPDATE_TWEET_FEEDBACK);
+	public boolean updateImageFeedback(int diseaseId, int imageId, Feedback.Operations operation) throws SQLException {
+		Feedback feedback = getFeedback(diseaseId, imageId, SQL_SELECT_IMAGE_FEEDBACK);
+		performFeedbackUpdate(feedback, operation);
+		return updateFeedback(feedback, SQL_UPDATE_IMAGE_FEEDBACK);
 	}
 
 	// TODO delete?
