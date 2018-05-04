@@ -11,6 +11,7 @@ import pt.ulisboa.ciencias.di.aw1718.group06.crawler.crawlers.TwitterCrawler;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.PubMed;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Tweet;
 import twitter4j.Twitter;
 import twitter4j.TwitterFactory;
 
@@ -85,7 +86,7 @@ public class Main {
                 	diseases = temp;
             }
 
-            
+            //get base diseases and related info
             TwitterCrawler twitterCrawler = new TwitterCrawler(catalog, twitter);
             PubMedCrawler pubmedCrawler = new PubMedCrawler(catalog);
             FlickrCrawler flickrCrawler = new FlickrCrawler(catalog);
@@ -105,6 +106,7 @@ public class Main {
             
             int numDiseases = limit;
             
+            //get pubmed-mentioned diseases and related info 
             while(numDiseases < MAX_DISEASES && pubmeds.size() > 0) {
             	for(PubMed p : pubmeds) {
             		//<DiseaseName,occurences in abstract>
@@ -142,6 +144,7 @@ public class Main {
             			.collect(Collectors.toList());
             }
             
+            //link pubmed-mentioned diseases to each pubmed
             for(PubMed p : pubmeds) {
             	Map<String, Integer> annotations = getAnnotations(p.getDescription());
             	if(annotations != null) {
@@ -154,6 +157,21 @@ public class Main {
             				catalog.addPubMedDiseaseLink(disease.getId(), p.getId(), disease.getId(), occurrences);
             				logger.info("Added link between " + disease.getId() + " and " + p.getId());
             			} 
+            		}
+            	}
+            }
+            
+            //link twitter mentioned diseases to each tweet
+            List<Tweet> tweets = catalog.getAllTweets();
+            for(Tweet t : tweets) {
+            	Map<String, Integer> annotations = getAnnotations(t.getDescription());
+            	if(annotations != null) {
+            		for(String diseaseName : annotations.keySet()) {
+            			int occurrences = annotations.get(diseaseName);
+            			Disease disease = catalog.getDisease(diseaseName);
+            			if(disease != null) {
+            				catalog.addDiseaseTweetLink(disease.getId(), disease.getId(), t.getId());
+            			}
             		}
             	}
             }
