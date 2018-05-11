@@ -23,6 +23,7 @@ public class DiseaseService {
     private static final Logger LOG = LoggerFactory.getLogger(DiseaseService.class);
     private static final String CONFIG_FILE_NAME = "config.properties";
     private DiseaseCatalog diseaseCatalog;
+    
 
     public DiseaseService() {
         try {
@@ -42,7 +43,7 @@ public class DiseaseService {
 
     @GET
     @Path("/get_by_name_fragment/{fragment}")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_XML})
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public List<Disease> getDiseasesByNameFragment(@PathParam("fragment") String fragment) throws SQLException {
         return diseaseCatalog.getFragmentDiseases(fragment);
     }
@@ -57,9 +58,17 @@ public class DiseaseService {
 
     private FullDisease buildFullDisease(String diseaseId) throws SQLException {
         Disease disease = diseaseCatalog.getDisease(diseaseId);
+        
+        // get top n PubMeds ranked by the index 
+        // this.index.getTopPubMeds(n, diseaseId) : List<Integer> pubMedIds // sorted
+        // select * from pubmeds where pubmedid in [pubMedIds]  // check if returns in the requested order
+        
+        // same for tweets and images
+        
         List<FullPubMed> pubMeds = diseaseCatalog.getFullPubmedsByDiseaseId(diseaseId);
         List<FullTweet> tweets = diseaseCatalog.getFullTweetsByDiseaseId(diseaseId);
         List<FullImage> images = diseaseCatalog.getFullImagesByDiseaseId(diseaseId);
+        
         return new FullDisease(disease.getId(), disease.getName(), disease.getDiseaseAbstract(), disease.getDerivedFrom(),
                 pubMeds, images, tweets);
     }
