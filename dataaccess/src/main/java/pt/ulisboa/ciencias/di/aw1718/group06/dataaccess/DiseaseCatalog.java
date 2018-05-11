@@ -20,12 +20,12 @@ public class DiseaseCatalog {
 	private static final String SQL_SELECT_ID_BY_NAME = "SELECT id FROM diseases WHERE name=?";
 	private static final String SQL_INSERT_DISEASE = "INSERT INTO diseases (name, abstract, was_derived_from) VALUES (?, ?, ?)";   
 	private static final String SQL_COUNT_DISEASES = "SELECT COUNT(*) FROM diseases";
-	
+
 	/*  TWEETS  */
 	private static final String SQL_INSERT_TWEET = "INSERT INTO tweets (url, text, pub_date) VALUES (?, ?, ?)";
 	private static final String SQL_INSERT_TWEET_DISEASE_LINKING = "INSERT INTO diseases_tweets (id_diseases, id_tweets, id_original_disease) VALUES (?, ?, ?)";
 	private static final String SQL_SELECT_ALL_TWEETS = "SELECT * FROM tweets";
-	
+
 	/*  PUBMED  */
 	private static final String SQL_SELECT_ALL_PUBMEDS = "SELECT * FROM pubmed";
 	private static final String SQL_SELECT_ID_BY_PUBMEDID = "SELECT id FROM pubmed WHERE pubmedID = ?";
@@ -39,14 +39,16 @@ public class DiseaseCatalog {
 	/*  DISEASES_PUBMED  */
 	private static final String SQL_SELECT_PAIR_DISEASEID_PUBMEDID = "SELECT * FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_SELECT_PUBMED_RELATED_DISEASES = "SELECT d.name FROM diseases d, diseases_pubmed dp WHERE d.id=dp.id_diseases AND dp.id_pubmed = ?";
+	private static final String SQL_SELECT_DISEASE_OCCURRENCES_IN_PUBMED = "SELECT occurrences FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
+	private static final String SQL_SELECT_ALL_OCCURRENCES_IN_PUBMED = "SELECT SUM(occurrences) FROM diseases_pubmed WHERE id_pubmed = ?";
 	private static final String SQL_UPDATE_PUBMED_RANK = "UPDATE diseases_pubmed SET rank = ? WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_UPDATE_PUBMED_OCCURRENCES = "UPDATE diseases_pubmed SET occurrences = ? WHERE id_diseases = ? AND id_pubmed = ?";
-	
+
 	/*  DISEASES_TWEETS*/
 	private static final String SQL_UPDATE_TWEET_RANK = "UPDATE diseases_tweets SET rank = ? WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_SELECT_PAIR_DISEASEID_TWEETID = "SELECT * FROM diseases_tweets WHERE id_diseases = ? AND id_tweets = ?";
 
-	
+
 
 
 	public DiseaseCatalog(Connection connection) {
@@ -116,7 +118,7 @@ public class DiseaseCatalog {
 		}
 		return disease;
 	}
-	
+
 	public List<Tweet> getAllTweets() throws SQLException{
 		ArrayList<Tweet> tweets = new ArrayList<>();
 		Statement stmt = conn.createStatement();
@@ -159,7 +161,7 @@ public class DiseaseCatalog {
 		boolean exists = false;
 		try(ResultSet keys = stmt.executeQuery()){
 			exists = keys.next();
-			
+
 			if(!exists) {
 				// Add entry in linking table.
 				stmt = conn.prepareStatement(SQL_INSERT_TWEET_DISEASE_LINKING, Statement.RETURN_GENERATED_KEYS);
@@ -202,7 +204,8 @@ public class DiseaseCatalog {
 				//pubmed article already exists in table pubmed
 				//add linking to this disease
 				int id = keys.getInt("id");
-				addPubMedDiseaseLink(diseaseID, id, diseaseID, 1);
+				int originalDiseaseID = getOriginalDiseaseID(pubmedID);
+				addPubMedDiseaseLink(diseaseID, id, diseaseID /*originalDiseaseID*/, 1);
 				return new PubMed(id, pubmedID, title, abstrct);
 			} else {
 				statement = conn.prepareStatement(SQL_INSERT_PUBMED, Statement.RETURN_GENERATED_KEYS);
@@ -229,6 +232,11 @@ public class DiseaseCatalog {
 		}  	
 	} 
 
+	private int getOriginalDiseaseID(int pubmedID) {
+		//TODO
+		return 0;
+	}
+
 	public void addPubMedDiseaseLink(int diseaseID, int id, int originalDiseaseID, int occurrences) throws SQLException {
 
 		PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_PAIR_DISEASEID_PUBMEDID, Statement.RETURN_GENERATED_KEYS);
@@ -237,7 +245,7 @@ public class DiseaseCatalog {
 		boolean exists = false;
 		try(ResultSet keys = stmt.executeQuery()){
 			exists = keys.next();
-		
+
 			if(!exists) { // pair (id_diseases,id_pubmed) doesnt exist 
 				PreparedStatement insertLinking = conn.prepareStatement(SQL_INSERT_PUBMED_DISEASE_LINKING, Statement.RETURN_GENERATED_KEYS);
 				insertLinking.setInt(1, diseaseID);
@@ -266,6 +274,29 @@ public class DiseaseCatalog {
 				}
 			}	
 		}
+	}
+
+	public int getDiseaseOccurrences(int diseaseID, int pubmedID) throws SQLException {
+		PreparedStatement statement = conn.prepareStatement(SQL_SELECT_DISEASE_OCCURRENCES_IN_PUBMED);
+		statement.setInt(1, diseaseID);
+		statement.setInt(2, pubmedID);
+		int occurrences = -1;
+		try(ResultSet keys = statement.executeQuery()){
+			if(keys.next())
+				occurrences = keys.getInt(1);
+		}
+		return occurrences;
+	}
+	
+	public int getAllOccurrences(int pubmedID) throws SQLException {
+		PreparedStatement statement = conn.prepareStatement(SQL_SELECT_ALL_OCCURRENCES_IN_PUBMED);
+		statement.setInt(1, pubmedID);
+		int occurrences = -1;
+		try(ResultSet keys = statement.executeQuery()){
+			if(keys.next())
+				occurrences = keys.getInt(1);
+		}
+		return occurrences;
 	}
 
 	public Image createImage(Disease disease, String url) throws SQLException {
@@ -372,5 +403,5 @@ public class DiseaseCatalog {
 		return diseases;
 	}
 
-	
+
 }
