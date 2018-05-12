@@ -117,7 +117,7 @@ public class Main {
                 			Disease disease = catalog.getDisease(diseaseName);
                 			if(disease != null) {
                 				//disease already in our db
-                				catalog.addPubMedDiseaseLink(disease.getId(), p.getId(), disease.getId(), occurrences);
+                				catalog.addPubMedDiseaseLink(disease.getId(), p.getId(), occurrences);
                 				logger.info("Added link between " + disease.getId() + " and " + p.getId());
                 			} else {
                 				//disease not in our db
@@ -154,7 +154,7 @@ public class Main {
             			if(disease != null) {
             				//we dont want to add any more diseases now, but we still have to add the links if 
             				//its a disease we already have
-            				catalog.addPubMedDiseaseLink(disease.getId(), p.getId(), disease.getId(), occurrences);
+            				catalog.addPubMedDiseaseLink(disease.getId(), p.getId(), occurrences);
             				logger.info("Added link between " + disease.getId() + " and " + p.getId());
             			} 
             		}
@@ -167,10 +167,10 @@ public class Main {
             	Map<String, Integer> annotations = getAnnotations(t.getDescription());
             	if(annotations != null) {
             		for(String diseaseName : annotations.keySet()) {
-            			int occurrences = annotations.get(diseaseName);
+            			int occurrences = annotations.get(diseaseName); //TODO?
             			Disease disease = catalog.getDisease(diseaseName);
             			if(disease != null) {
-            				catalog.addDiseaseTweetLink(disease.getId(), disease.getId(), t.getId());
+            				catalog.addDiseaseTweetLink(disease.getId(), t.getId());
             			}
             		}
             	}
