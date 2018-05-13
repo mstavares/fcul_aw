@@ -1,12 +1,13 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.ws;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.FullDisease;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.FullImage;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.FullPubMed;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.FullTweet;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.*;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
 
 import javax.ws.rs.GET;
@@ -17,7 +18,9 @@ import javax.ws.rs.core.MediaType;
 import java.sql.SQLException;
 import java.util.List;
 
+
 @Path("/disease")
+@Api(value = "disease", description = "This WS provides information related with diseases")
 public class DiseaseService {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiseaseService.class);
@@ -33,6 +36,12 @@ public class DiseaseService {
         }
     }
 
+    @GET
+    @Path("/get_statistics")
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Statistic getStatistics() throws SQLException {
+        return diseaseCatalog.getStatistic();
+    }
 
     @GET
     @Path("/get_all/{limit}")
@@ -48,13 +57,13 @@ public class DiseaseService {
         return diseaseCatalog.getFragmentDiseases(fragment);
     }
 
-
     @GET
     @Path("/get_full_disease/{id}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Object getFullDisease(@PathParam("id") String diseaseId) throws SQLException {
         return buildFullDisease(diseaseId);
     }
+
 
     private FullDisease buildFullDisease(String diseaseId) throws SQLException {
         Disease disease = diseaseCatalog.getDisease(diseaseId);

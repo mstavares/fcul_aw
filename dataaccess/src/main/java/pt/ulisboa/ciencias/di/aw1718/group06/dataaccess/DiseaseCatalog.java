@@ -3,10 +3,7 @@ package pt.ulisboa.ciencias.di.aw1718.group06.dataaccess;
 import com.mysql.cj.jdbc.MysqlDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.FullImage;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.FullPubMed;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.FullTweet;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.*;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Image;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.PubMed;
@@ -43,6 +40,7 @@ public class DiseaseCatalog {
 	private static final String SQL_SELECT_TWEETS_BY_DISEASE_ID = "SELECT * FROM tweets, diseases_tweets WHERE diseases_tweets.id_diseases = ? AND tweets.id = diseases_tweets.id_tweets;";
 	private static final String SQL_INSERT_TWEET = "INSERT INTO tweets (url, text, pub_date) VALUES (?, ?, ?)";
 	private static final String SQL_INSERT_TWEET_DISEASE_LINKING = "INSERT INTO diseases_tweets (id_diseases, id_tweets, id_original_disease) VALUES (?, ?, ?)";
+	private static final String SQL_COUNT_TWEETS = "SELECT COUNT(*) FROM tweets";
 
 	/*  PUBMED  */
 	private static final String SQL_SELECT_PUBMEDS_BY_DISEASE_ID = "SELECT * FROM pubmed, diseases_pubmed WHERE diseases_pubmed.id_diseases = ? AND pubmed.id = diseases_pubmed.id_pubmed;";
@@ -50,11 +48,13 @@ public class DiseaseCatalog {
 	private static final String SQL_SELECT_ID_BY_PUBMEDID = "SELECT id FROM pubmed WHERE pubmedID = ?";
 	private static final String SQL_INSERT_PUBMED = "INSERT INTO pubmed (pubmedID, title, abstract, pub_date) VALUES (?, ?, ?, ?)";
 	private static final String SQL_INSERT_PUBMED_DISEASE_LINKING = "INSERT INTO diseases_pubmed (id_diseases, id_pubmed, id_original_disease, occurrences) VALUES (?, ?, ?, ?)";
+	private static final String SQL_COUNT_PUBMEDS = "SELECT COUNT(*) FROM pubmed";
 
 	/*  IMAGES  */
 	private static final String SQL_SELECT_IMAGES_BY_DISEASE_ID = "SELECT * FROM images, diseases_images WHERE diseases_images.id_diseases = ? AND images.id = diseases_images.id_images;";
 	private static final String SQL_INSERT_IMAGE = "INSERT INTO images (url) VALUES (?)";
 	private static final String SQL_INSERT_IMAGE_DISEASE_LINKING = "INSERT INTO diseases_images (id_diseases, id_images) VALUES (?, ?)";
+	private static final String SQL_COUNT_IMAGES = "SELECT COUNT(*) FROM images";
 
 	/*  DISEASES_PUBMED  */
 	private static final String SQL_SELECT_PUBMED_FEEDBACK = "SELECT * FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?;";
@@ -395,6 +395,14 @@ public class DiseaseCatalog {
 		return id;
 	}
 
+	public Statistic getStatistic() throws SQLException {
+		int numberOfDiseases = getNumberOf(SQL_COUNT_DISEASES);
+		int numberOfPubMeds = getNumberOf(SQL_COUNT_PUBMEDS);
+		int numberOfTweets = getNumberOf(SQL_COUNT_TWEETS);
+		int numberOfImages = getNumberOf(SQL_COUNT_IMAGES);
+		return new Statistic(numberOfDiseases, numberOfPubMeds, numberOfTweets, numberOfImages);
+	}
+
 	private Feedback getFeedback(int diseaseId, int objectId, String query) throws SQLException {
 		PreparedStatement preparedStatement = connection.prepareStatement(query);
 		preparedStatement.setInt(1, diseaseId);
@@ -476,10 +484,10 @@ public class DiseaseCatalog {
 		return true;
 	}
 
-	public int getNumDiseases() throws SQLException {
+	public int getNumberOf(String countQuery) throws SQLException {
 		int count = 0;
 		Statement statement = connection.createStatement();
-		try(ResultSet result = statement.executeQuery(SQL_COUNT_DISEASES)){
+		try(ResultSet result = statement.executeQuery(countQuery)){
 			if(result.next())
 				count = result.getInt(1);
 		}
