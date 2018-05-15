@@ -36,14 +36,20 @@ public class Index {
 
         Feedback maxFb = catalog.getPubMedMaxFeedback(diseaseId);
         for (Pair<Integer, RankingData> pmToRD : index.get(diseaseId)) {
-            Integer pmId = pmToRD.getKey();
+            int pmId = pmToRD.getKey();
             Feedback fb = catalog.getDiseasePubMedFeedback(diseaseId, pmId);
 
+            double normImplicit = (maxFb.getImplicitFeedback() == 0
+                ? fb.getImplicitFeedback()
+                : fb.getImplicitFeedback() / (double) maxFb.getImplicitFeedback());
+            double normExplicit = (maxFb.getExplicitFeedback() == 0
+                ? fb.getExplicitFeedback()
+                : fb.getExplicitFeedback() / (double) maxFb.getExplicitFeedback());
             RankingData newRd = new RankingData(
                 pmToRD.getValue().getTfidf(),
                 pmToRD.getValue().getNormalizedDate(),
-                fb.getImplicitFeedback() / (double) maxFb.getImplicitFeedback(),
-                fb.getExplicitFeedback() / (double) maxFb.getExplicitFeedback());
+                normImplicit,
+                normExplicit);
 
             finalRanking.add(new Pair<>(pmId, ranker.computeRank(newRd)));
         }
@@ -66,65 +72,70 @@ public class Index {
 
         computeAndStoreTfIdf(disIds, pubMedsAnnotated);
         index.putAll(getPrecomputedRankingData(disIds, pubMedsAnnotated));
-
     }
 
     private List<Pair<Integer, List<Integer>>> getPubMedsAnnotated(List<Integer> pubmeds) throws SQLException {
         List<Pair<Integer, List<Integer>>> pubMedsAnnotated = new ArrayList<>();
-        for (Integer pmId : pubmeds) {
+        for (int pmId : pubmeds) {
             pubMedsAnnotated.add(new Pair<>(pmId, catalog.getRelatedDiseaseIds(pmId)));
         }
         return pubMedsAnnotated;
     }
 
-    private void computeAndStoreTfIdf(List<Integer> diseases, List<Pair<Integer, List<Integer>>> pubMedsAnnotated) throws SQLException {
-        // for normalization of idf for all diseases
-        Map<Integer, Double> diseaseToIdf = new HashMap<>();
-        double maxIdf = 0;
+    private List<Integer> getRelevantPubMeds(int disId, List<Pair<Integer, List<Integer>>> pubMedsAnnotated) {
+        return pubMedsAnnotated.stream()
+            .filter(pma -> pma.getValue().contains(disId))
+            .map(Pair::getKey)
+            .collect(Collectors.toList());
+    }
 
-        for (Integer disId : diseases) {
+    /**
+     * Computes and updates {@code catalog}'s values of TF-IDF metrics.
+     *
+     * @param diseases
+     * @param pubMedsAnnotated
+     * @throws SQLException
+     */
+    private void computeAndStoreTfIdf(List<Integer> diseases, List<Pair<Integer, List<Integer>>> pubMedsAnnotated) throws SQLException {
+        for (int disId : diseases) {
             List<Integer> relevant = getRelevantPubMeds(disId, pubMedsAnnotated);
 
             double idf = Math.log(pubMedsAnnotated.size() / (double) relevant.size());
-            diseaseToIdf.put(disId, idf);
-            if (idf > maxIdf) {
-                maxIdf = idf;
+            catalog.updateDiseaseIdf(disId, idf);
+            for (int pmId : relevant) {
+                double tf = catalog.getDiseaseOccurrences(disId, pmId) / (double) catalog.getAllOccurrences(pmId);
+                catalog.updateDiseasePubmedTf(disId, pmId, tf);
             }
-            for (Integer pm : relevant) {
-                int occ = catalog.getDiseaseOccurrences(disId, pm);
-                double tf = occ / (double) catalog.getAllOccurrences(pm);
-                catalog.updateDiseasePubmedTf(disId, pm, tf);
-            }
-        }
-        // idf normalization
-        for (Map.Entry<Integer, Double> dToIdf : diseaseToIdf.entrySet()) {
-            catalog.updateDiseaseIdf(dToIdf.getKey(), dToIdf.getValue() / maxIdf);
         }
     }
 
     private Map<Integer, List<Pair<Integer, RankingData>>> getPrecomputedRankingData(
           List<Integer> disIds, List<Pair<Integer, List<Integer>>> pubMedsAnnotated) throws SQLException {
 
+        Map<Integer, Double> idfs = catalog.getAllIdfs();
         Map<Integer, List<Pair<Integer, RankingData>>> ind = new HashMap<>();
-        for (Integer disId : disIds) {
-            double idf = catalog.getIdf(disId);
+        for (int disId : disIds) {
+            double idf = idfs.get(disId);
             List<Integer> relevant = getRelevantPubMeds(disId, pubMedsAnnotated);
 
+            double maxTfIdf = 0;
             List<Pair<Integer, RankingData>> rankingData = new ArrayList<>();
-            for (Integer pmId : relevant) {
+            for (int pmId : relevant) {
                 double tfidf = catalog.getTf(disId, pmId) * idf;
+                if (tfidf > maxTfIdf) {
+                    maxTfIdf = tfidf;
+                }
                 double normalizedDate = catalog.getPubMedDate(pmId).getTime() / (double) BASE_TIME;
                 rankingData.add(new Pair<>(pmId, new RankingData(tfidf, normalizedDate)));
             }
+            // Normalize tf-idf values by the maximum value among relevant documents.
+            // Thanks to that, the document with the highest value of tf-idf will effectively get a max value of 1.
+            for (Pair<Integer, RankingData> rd : rankingData) {
+                rd.getValue().normalizeTfIdf(maxTfIdf);
+            }
+
             ind.put(disId, rankingData);
         }
         return ind;
-    }
-
-    private List<Integer> getRelevantPubMeds(int disId, List<Pair<Integer, List<Integer>>> pubMedsAnnotated) {
-        return pubMedsAnnotated.stream()
-                    .filter(pma -> pma.getValue().contains(disId))
-                    .map(Pair::getKey)
-                    .collect(Collectors.toList());
     }
 }

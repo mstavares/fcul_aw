@@ -8,7 +8,9 @@ import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DiseaseCatalog {
 
@@ -21,6 +23,7 @@ public class DiseaseCatalog {
 	private static final String SQL_INSERT_DISEASE = "INSERT INTO diseases (name, abstract, was_derived_from) VALUES (?, ?, ?)";
 	private static final String SQL_COUNT_DISEASES = "SELECT COUNT(*) FROM diseases";
 	private static final String SQL_SELECT_DISEASE_IDF = "SELECT idf FROM diseases WHERE id = ?";
+	private static final String SQL_SELECT_ALL_IDFS = "SELECT id, idf FROM diseases";
 	private static final String SQL_UPDATE_DISEASE_IDF = "UPDATE diseases SET idf = ? WHERE id = ?";
 
 	/*  TWEETS  */
@@ -357,6 +360,17 @@ public class DiseaseCatalog {
             }
 		}
 		return idf;
+	}
+
+	public Map<Integer, Double> getAllIdfs() throws SQLException {
+        Map<Integer, Double> dToIdf = new HashMap<>();
+        PreparedStatement statement = conn.prepareStatement(SQL_SELECT_ALL_IDFS, Statement.RETURN_GENERATED_KEYS);
+		try(ResultSet result = statement.executeQuery()){
+			while (result.next()) {
+                dToIdf.put(result.getInt("id"), result.getDouble("idf"));
+            }
+		}
+		return dToIdf;
 	}
 	
 	public boolean updateDiseaseIdf(int diseaseID, double idf) throws SQLException {

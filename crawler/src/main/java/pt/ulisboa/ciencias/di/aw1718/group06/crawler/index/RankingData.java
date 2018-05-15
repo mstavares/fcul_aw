@@ -3,7 +3,7 @@ package pt.ulisboa.ciencias.di.aw1718.group06.crawler.index;
 public class RankingData {
 
 
-    private final double tfidf;
+    private double tfidf;
     private final double date;
     private final double implicitFeedback;
     private final double explicitFeedback;
@@ -36,5 +36,11 @@ public class RankingData {
 
     public double getExplicitFeedback() {
         return explicitFeedback;
+    }
+
+    public void normalizeTfIdf(double factor) {
+        if (factor != 0) {
+            this.tfidf /= factor;
+        }
     }
 }
