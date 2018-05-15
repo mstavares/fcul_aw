@@ -113,7 +113,7 @@ public class Index {
             List<Pair<Integer, RankingData>> rankingData = new ArrayList<>();
             for (Integer pmId : relevant) {
                 double tfidf = catalog.getTf(disId, pmId) * idf;
-                double normalizedDate = catalog.getPubMedDate(pmId).toMillis() / (double) BASE_TIME;
+                double normalizedDate = catalog.getPubMedDate(pmId).getTime() / (double) BASE_TIME;
                 rankingData.add(new Pair<>(pmId, new RankingData(tfidf, normalizedDate)));
             }
             ind.put(disId, rankingData);
