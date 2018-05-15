@@ -3,7 +3,8 @@ CREATE TABLE diseases (
 	doid VARCHAR(20),
 	name VARCHAR(255) UNIQUE NOT NULL, 
 	abstract MEDIUMTEXT, 
-	was_derived_from VARCHAR(255), 
+	was_derived_from VARCHAR(255),
+	idf DOUBLE DEFAULT 0,
 	PRIMARY KEY (id)
 )ENGINE=InnoDB; 
 
@@ -30,7 +31,6 @@ CREATE TABLE pubmed (
 	abstract MEDIUMTEXT,
 	pub_date DATE,
 	id_original_disease INT NOT NULL,
-	idf DOUBLE DEFAULT 0,
 	PRIMARY KEY (id),
 	FOREIGN KEY (id_original_disease) REFERENCES diseases(id) ON UPDATE CASCADE ON DELETE CASCADE
 )ENGINE=InnoDB;

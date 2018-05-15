@@ -175,6 +175,9 @@ public class Main {
             		}
             	}
             }
+            
+            
+            //TODO should call something to compute and store tf and idf in tables
 
         } catch (SQLException e) {
             logger.error("Error while connecting to database: " + e.getErrorCode(), e);

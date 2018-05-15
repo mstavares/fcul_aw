@@ -20,7 +20,9 @@ public class DiseaseCatalog {
 	private static final String SQL_SELECT_ID_BY_NAME = "SELECT id FROM diseases WHERE name=?";
 	private static final String SQL_INSERT_DISEASE = "INSERT INTO diseases (name, abstract, was_derived_from) VALUES (?, ?, ?)";   
 	private static final String SQL_COUNT_DISEASES = "SELECT COUNT(*) FROM diseases";
-
+	private static final String SQL_SELECT_DISEASE_IDF = "SELECT idf FROM diseases WHERE id = ?";
+	private static final String SQL_UPDATE_DISEASE_IDF = "UPDATE diseases SET idf = ? WHERE id = ?";
+	
 	/*  TWEETS  */
 	private static final String SQL_INSERT_TWEET = "INSERT INTO tweets (url, text, pub_date, id_original_disease) VALUES (?, ?, ?, ?)";
 	private static final String SQL_SELECT_ALL_TWEETS = "SELECT * FROM tweets";
@@ -30,8 +32,6 @@ public class DiseaseCatalog {
 	private static final String SQL_SELECT_ID_BY_PUBMEDID = "SELECT id FROM pubmed WHERE pubmedID = ?";
 	private static final String SQL_INSERT_PUBMED = "INSERT INTO pubmed (pubmedID, title, abstract, pub_date, id_original_disease) VALUES (?, ?, ?, ?, ?)";
 	private static final String SQL_INSERT_PUBMED_DISEASE_LINKING = "INSERT INTO diseases_pubmed (id_diseases, id_pubmed, occurrences) VALUES (?, ?, ?)";
-	private static final String SQL_SELECT_PUBMED_IDF = "SELECT idf FROM pubmed WHERE id = ?";
-	private static final String SQL_UPDATE_PUBMED_IDF = "UPDATE pubmed SET idf = ? WHERE id = ?";
 	
 	/*  IMAGES  */
 	private static final String SQL_INSERT_IMAGE = "INSERT INTO images (url) VALUES (?)";
@@ -52,7 +52,10 @@ public class DiseaseCatalog {
 	private static final String SQL_SELECT_PAIR_DISEASEID_TWEETID = "SELECT * FROM diseases_tweets WHERE id_diseases = ? AND id_tweets = ?";
 	private static final String SQL_INSERT_TWEET_DISEASE_LINKING = "INSERT INTO diseases_tweets (id_diseases, id_tweets) VALUES (?, ?)";
 	
-
+	/* FEEDBACK QUERIES */
+	private static final String SQL_GET_PUBMED_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_pubmed WHERE id_diseases = ?";
+	private static final String SQL_GET_TWEET_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_tweets WHERE id_diseases = ?";	
+	private static final String SQL_GET_IMAGE_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_images WHERE id_diseases = ?";
 
 	public DiseaseCatalog(Connection connection) {
 		this.conn = connection;
@@ -290,7 +293,7 @@ public class DiseaseCatalog {
 		PreparedStatement statement = conn.prepareStatement(SQL_SELECT_DISEASE_PUBMED_TF, Statement.RETURN_GENERATED_KEYS);
 		statement.setInt(1, diseaseID);
 		statement.setInt(2, pubmedID);
-		long tf = -1;
+		double tf = -1;
 		try(ResultSet keys = statement.executeQuery()){
 			if(keys.next())
 				tf = keys.getInt(1);
@@ -311,10 +314,10 @@ public class DiseaseCatalog {
 		return true;
 	}
 	
-	public double getIdf(int pubmedID) throws SQLException {
-		PreparedStatement statement = conn.prepareStatement(SQL_SELECT_PUBMED_IDF, Statement.RETURN_GENERATED_KEYS);
-		statement.setInt(1, pubmedID);
-		long idf = -1;
+	public double getIdf(int diseaseID) throws SQLException {
+		PreparedStatement statement = conn.prepareStatement(SQL_SELECT_DISEASE_IDF, Statement.RETURN_GENERATED_KEYS);
+		statement.setInt(1, diseaseID);
+		double idf = -1;
 		try(ResultSet keys = statement.executeQuery()){
 			if(keys.next())
 				idf = keys.getInt(1);
@@ -322,10 +325,10 @@ public class DiseaseCatalog {
 		return idf;
 	}
 	
-	public boolean updatePubmedIdf(int pubmedID, double idf) throws SQLException {
-		PreparedStatement statement = conn.prepareStatement(SQL_UPDATE_PUBMED_IDF);
+	public boolean updateDiseaseIdf(int diseaseID, double idf) throws SQLException {
+		PreparedStatement statement = conn.prepareStatement(SQL_UPDATE_DISEASE_IDF);
 		statement.setDouble(1, idf);
-		statement.setInt(2, pubmedID);	
+		statement.setInt(2, diseaseID);	
 
 		int affected = statement.executeUpdate();
 		if (affected == 0) {
@@ -449,6 +452,53 @@ public class DiseaseCatalog {
 			}
 		}
 		throw new SQLException("Retrieving generated id failed.");
+	}
+	
+	
+	/////////////////////////////////////////////FEEDBACK//////////////////////////////////////////////
+	public Feedback getPubMedMaxFeedback(int diseaseID) throws SQLException {
+		PreparedStatement statement = conn.prepareStatement(SQL_GET_PUBMED_DISEASE_MAX_FEEDBACK, Statement.RETURN_GENERATED_KEYS);
+		statement.setInt(1, diseaseID);
+		int implicit = 0,
+		    explicit = 0;
+		try(ResultSet keys = statement.executeQuery()){
+			if(keys.next()) {
+				implicit = keys.getInt(1);
+				explicit = keys.getInt(2);
+			}
+				
+		}
+		return new Feedback(implicit,explicit);
+	}
+	
+	public Feedback getTweetsMaxFeedback(int diseaseID) throws SQLException {
+		PreparedStatement statement = conn.prepareStatement(SQL_GET_TWEET_DISEASE_MAX_FEEDBACK, Statement.RETURN_GENERATED_KEYS);
+		statement.setInt(1, diseaseID);
+		int implicit = 0,
+		    explicit = 0;
+		try(ResultSet keys = statement.executeQuery()){
+			if(keys.next()) {
+				implicit = keys.getInt(1);
+				explicit = keys.getInt(2);
+			}
+				
+		}
+		return new Feedback(implicit,explicit);
+	}
+	
+	public Feedback getImageMaxFeedback(int diseaseID) throws SQLException {
+		PreparedStatement statement = conn.prepareStatement(SQL_GET_IMAGE_DISEASE_MAX_FEEDBACK, Statement.RETURN_GENERATED_KEYS);
+		statement.setInt(1, diseaseID);
+		int implicit = 0,
+		    explicit = 0;
+		try(ResultSet keys = statement.executeQuery()){
+			if(keys.next()) {
+				implicit = keys.getInt(1);
+				explicit = keys.getInt(2);
+			}
+				
+		}
+		return new Feedback(implicit,explicit);
 	}
 
 	
