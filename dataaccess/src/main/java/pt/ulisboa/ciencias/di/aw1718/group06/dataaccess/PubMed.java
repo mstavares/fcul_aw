@@ -9,6 +9,10 @@ public class PubMed {
 	private String title;
 
 	private String description;
+	
+	private int implicitFeedback;
+	
+	private int explicitFeedback;
 
 
 	public PubMed(int id, int pubMedID, String title, String description) {
