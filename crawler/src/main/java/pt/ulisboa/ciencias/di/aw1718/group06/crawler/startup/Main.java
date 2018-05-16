@@ -12,10 +12,10 @@ import pt.ulisboa.ciencias.di.aw1718.group06.crawler.crawlers.TwitterCrawler;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.CompoundRanker;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.Index;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.RankType;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Disease;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.PubMed;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Tweet;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.PubMed;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Tweet;
 import twitter4j.Twitter;
 import twitter4j.TwitterFactory;
 

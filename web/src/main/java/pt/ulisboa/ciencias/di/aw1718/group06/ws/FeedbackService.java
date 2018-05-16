@@ -1,14 +1,11 @@
-package pt.ulisboa.ciencias.di.aw1718.group06.ws.services;
+package pt.ulisboa.ciencias.di.aw1718.group06.ws;
 
-
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 @Path("/feedback")
 public class FeedbackService {
-
 
     @POST
     @Path("/implicit/increment")

@@ -5,17 +5,16 @@
          version="3.1">
 
     <servlet>
-        <servlet-name>RESTful</servlet-name>
+        <servlet-name>Jersey REST Service</servlet-name>
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>jersey.config.server.provider.packages</param-name>
-            <param-value>pt.ulisboa.ciencias.di.aw1718.group06.ws.services</param-value>
+            <param-value>pt.ulisboa.ciencias.di.aw1718.group06.ws</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
-
     <servlet-mapping>
-        <servlet-name>RESTful</servlet-name>
+        <servlet-name>Jersey REST Service</servlet-name>
         <url-pattern>/ws/*</url-pattern>
     </servlet-mapping>
 

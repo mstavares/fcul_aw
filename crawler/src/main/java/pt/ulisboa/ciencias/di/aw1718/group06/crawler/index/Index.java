@@ -2,9 +2,9 @@ package pt.ulisboa.ciencias.di.aw1718.group06.crawler.index;
 
 import com.google.common.collect.ImmutableList;
 import javafx.util.Pair;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Disease;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Feedback;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Feedback;
 
 import java.sql.SQLException;
 import java.util.*;

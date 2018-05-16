@@ -1,12 +1,16 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.dataaccess;
 
-import com.mysql.cj.jdbc.MysqlDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.FullImage;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.FullPubMed;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.FullTweet;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Feedback;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Image;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.PubMed;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Tweet;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -17,7 +21,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
 import java.util.Map;
 
 public class DiseaseCatalog {
@@ -27,7 +30,7 @@ public class DiseaseCatalog {
 
 	/*  DISEASES  */
 	private static final String SQL_SELECT_ALL_DISEASES = "SELECT * FROM diseases";
-	private static final String SQL_SELECT_SINGLE_DISEASE = "SELECT * FROM diseases WHERE name = ?";
+	private static final String SQL_SELECT_SINGLE_DISEASE_BY_NAME = "SELECT * FROM diseases WHERE id = ? OR name = ?";
 	private static final String SQL_SELECT_FRAGMENT_DISEASES = "SELECT * FROM diseases WHERE name LIKE ?";
 	private static final String SQL_SELECT_ID_BY_NAME = "SELECT id FROM diseases WHERE name=?";
 	private static final String SQL_INSERT_DISEASE = "INSERT INTO diseases (name, abstract, was_derived_from) VALUES (?, ?, ?)";
@@ -37,10 +40,13 @@ public class DiseaseCatalog {
 	private static final String SQL_UPDATE_DISEASE_IDF = "UPDATE diseases SET idf = ? WHERE id = ?";
 
 	/*  TWEETS  */
-	private static final String SQL_INSERT_TWEET = "INSERT INTO tweets (url, text, pub_date, id_original_disease) VALUES (?, ?, ?, ?)";
-	private static final String SQL_SELECT_ALL_TWEETS = "SELECT * FROM tweets";
+    private static final String SQL_INSERT_TWEET = "INSERT INTO tweets (url, text, pub_date, id_original_disease) VALUES (?, ?, ?, ?)";
+    private static final String SQL_SELECT_ALL_TWEETS = "SELECT * FROM tweets";
+    private static final String SQL_SELECT_TWEETS_BY_DISEASE_ID = "SELECT * FROM tweets, diseases_tweets WHERE diseases_tweets.id_diseases = ? AND tweets.id = diseases_tweets.id_tweets;";
+    private static final String SQL_INSERT_TWEET_DISEASE_LINKING = "INSERT INTO diseases_tweets (id_diseases, id_tweets, id_original_disease) VALUES (?, ?, ?)";
 
 	/*  PUBMED  */
+	private static final String SQL_SELECT_PUBMEDS_BY_DISEASE_ID = "SELECT * FROM pubmed, diseases_pubmed WHERE diseases_pubmed.id_diseases = ? AND pubmed.id = diseases_pubmed.id_pubmed;";
 	private static final String SQL_SELECT_ALL_PUBMEDS = "SELECT * FROM pubmed";
 	private static final String SQL_SELECT_ALL_PUBMED_IDS = "SELECT id FROM pubmed";
 	private static final String SQL_SELECT_ID_BY_PUBMEDID = "SELECT id FROM pubmed WHERE pubmedID = ?";
@@ -49,24 +55,32 @@ public class DiseaseCatalog {
 	private static final String SQL_INSERT_PUBMED_DISEASE_LINKING = "INSERT INTO diseases_pubmed (id_diseases, id_pubmed, occurrences) VALUES (?, ?, ?)";
 
 	/*  IMAGES  */
+	private static final String SQL_SELECT_IMAGES_BY_DISEASE_ID = "SELECT * FROM images, diseases_images WHERE diseases_images.id_diseases = ? AND images.id = diseases_images.id_images;";
 	private static final String SQL_INSERT_IMAGE = "INSERT INTO images (url) VALUES (?)";
 	private static final String SQL_INSERT_IMAGE_DISEASE_LINKING = "INSERT INTO diseases_images (id_diseases, id_images) VALUES (?, ?)";
 
 	/*  DISEASES_PUBMED  */
+	private static final String SQL_SELECT_PUBMED_FEEDBACK = "SELECT * FROM diseases_pubmed WHERE id_diseases = ? AND pubmed.id = ?;";
+	private static final String SQL_UPDATE_PUBMED_FEEDBACK = "UPDATE diseases_pubmed SET implicit_feedback = ?, explicit_feedback = ? WHERE id_diseases = ? AND pubmed.id = ?;";
 	private static final String SQL_SELECT_PAIR_DISEASEID_PUBMEDID = "SELECT * FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_SELECT_PUBMED_RELATED_DISEASES = "SELECT d.name FROM diseases d, diseases_pubmed dp WHERE d.id=dp.id_diseases AND dp.id_pubmed = ?";
 	private static final String SQL_SELECT_PUBMED_RELATED_DISEASE_IDS = "SELECT id_diseases FROM diseases_pubmed WHERE id_pubmed = ?";
 	private static final String SQL_SELECT_DISEASE_OCCURRENCES_IN_PUBMED = "SELECT occurrences FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_SELECT_ALL_OCCURRENCES_IN_PUBMED = "SELECT SUM(occurrences) FROM diseases_pubmed WHERE id_pubmed = ?";
 	private static final String SQL_UPDATE_PUBMED_OCCURRENCES = "UPDATE diseases_pubmed SET occurrences = ? WHERE id_diseases = ? AND id_pubmed = ?";
-	private static final String SQL_SELECT_DISEASE_PUBMED_TF = "SELECT tf FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
-	private static final String SQL_UPDATE_DISEASE_PUBMED_TF = "UPDATE diseases_pubmed SET tf = ? WHERE id_diseases = ? AND id_pubmed = ?";
+    private static final String SQL_SELECT_DISEASE_PUBMED_TF = "SELECT tf FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
+    private static final String SQL_UPDATE_DISEASE_PUBMED_TF = "UPDATE diseases_pubmed SET tf = ? WHERE id_diseases = ? AND id_pubmed = ?";
 
-	/*  DISEASES_TWEETS*/
-	private static final String SQL_SELECT_PAIR_DISEASEID_TWEETID = "SELECT * FROM diseases_tweets WHERE id_diseases = ? AND id_tweets = ?";
-	private static final String SQL_INSERT_TWEET_DISEASE_LINKING = "INSERT INTO diseases_tweets (id_diseases, id_tweets) VALUES (?, ?)";
+    /*  DISEASES_TWEETS*/
+    private static final String SQL_SELECT_PAIR_DISEASEID_TWEETID = "SELECT * FROM diseases_tweets WHERE id_diseases = ? AND id_tweets = ?";
+    private static final String SQL_SELECT_TWEET_FEEDBACK = "SELECT * FROM diseases_tweets WHERE id_diseases = ? AND tweets.id = ?;";
+    private static final String SQL_UPDATE_TWEET_FEEDBACK = "UPDATE diseases_tweets SET implicit_feedback = ?, explicit_feedback = ? WHERE id_diseases = ? AND tweets.id = ?;";
 
-	/* FEEDBACK QUERIES */
+    /*  DISEASES_IMAGES */
+    private static final String SQL_SELECT_IMAGE_FEEDBACK = "SELECT * FROM diseases_images WHERE id_diseases = ? AND image.id = ?;";
+    private static final String SQL_UPDATE_IMAGE_FEEDBACK = "UPDATE diseases_images SET implicit_feedback = ?, explicit_feedback = ? WHERE id_diseases = ? AND image.id = ?;";
+
+    /* FEEDBACK QUERIES */
     private static final String SQL_GET_PUBMED_DISEASE_FEEDBACK = "SELECT implicit_feedback, explicit_feedback FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_GET_PUBMED_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_pubmed WHERE id_diseases = ?";
 	private static final String SQL_GET_TWEET_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_tweets WHERE id_diseases = ?";
@@ -144,8 +158,9 @@ public class DiseaseCatalog {
 	public Disease getDisease(String searchTerm) throws SQLException {
 		Disease disease = null;
 
-		PreparedStatement statement = conn.prepareStatement(SQL_SELECT_SINGLE_DISEASE);
+		PreparedStatement statement = conn.prepareStatement(SQL_SELECT_SINGLE_DISEASE_BY_NAME);
 		statement.setString(1, searchTerm);
+		statement.setString(2, searchTerm);
 
 		try (ResultSet result = statement.executeQuery()) {
 			while (result.next()) {
@@ -297,6 +312,26 @@ public class DiseaseCatalog {
 		return pubmeds;
 	}
 
+	public List<FullPubMed> getFullPubmedsByDiseaseId(String diseaseId) throws SQLException {
+		ArrayList<FullPubMed> results = new ArrayList<>();
+		PreparedStatement preparedStatement = conn.prepareStatement(SQL_SELECT_PUBMEDS_BY_DISEASE_ID);
+		preparedStatement.setString(1, diseaseId);
+		try (ResultSet result = preparedStatement.executeQuery()) {
+			while (result.next()) {
+				int id = result.getInt("id");
+				int pubMedId = result.getInt("pubmedID");
+				String title = result.getString("title");
+				String description = result.getString("abstract");
+				int idOriginalDisease = result.getInt("id_original_disease");
+				int relevance = result.getInt("relevance");
+				int implicitFeedback = result.getInt("implicit_feedback");
+				int explicitFeedback = result.getInt("explicit_feedback");
+				results.add(new FullPubMed(id, pubMedId, title, description, idOriginalDisease, implicitFeedback, explicitFeedback, relevance));
+			}
+		}
+		return results;
+	}
+
     public List<Integer> getAllPubMedIds() throws SQLException {
         List<Integer> pubmeds = new ArrayList<>();
         Statement stmt = conn.createStatement();
@@ -413,6 +448,67 @@ public class DiseaseCatalog {
     }
 
 
+    private pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback getFeedback(int diseaseId, int objectId, String query) throws SQLException {
+        PreparedStatement preparedStatement = conn.prepareStatement(query);
+        preparedStatement.setInt(1, diseaseId);
+        preparedStatement.setInt(2, objectId);
+        try (ResultSet result = preparedStatement.executeQuery()) {
+            if (result.next()) {
+                int implicitFeedback = result.getInt("implicit_feedback");
+                int explicitFeedback = result.getInt("explicit_feedback");
+                return new pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback(diseaseId, objectId, implicitFeedback, explicitFeedback);
+            }
+        }
+        throw new SQLException("Instance not found");
+    }
+
+    private boolean updateFeedback(pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback feedback, String query) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(query);
+        statement.setInt(1, feedback.getImplicitFeedback());
+        statement.setInt(2, feedback.getExplicitFeedback());
+        statement.setInt(3, feedback.getDiseaseId());
+        statement.setInt(4, feedback.getObjectId());
+        return statement.executeUpdate() != 0;
+    }
+
+    private void performFeedbackUpdate(pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback feedback, pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback.Operations operation) {
+        if(pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback.Operations.INCREMENT_IMPLICIT == operation) {
+            feedback.incrementImplicitFeedback();
+        } else if(pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback.Operations.INCREMENT_EXPLICIT == operation) {
+            feedback.incrementExplicitFeedback();
+        } else if(pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback.Operations.DECREMENT_IMPLICIT == operation) {
+            feedback.decrementImplicitFeedback();
+        } else {
+            feedback.decrementExplicitFeedback();
+        }
+    }
+
+    public boolean updatePubMeFeedback(int diseaseId, int pubMedId, pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback.Operations operation) throws SQLException {
+        pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback feedback = getFeedback(diseaseId, pubMedId, SQL_SELECT_PUBMED_FEEDBACK);
+        performFeedbackUpdate(feedback, operation);
+        return updateFeedback(feedback, SQL_UPDATE_PUBMED_FEEDBACK);
+    }
+
+    public boolean updateImageFeedback(int diseaseId, int imageId, boolean increment) throws SQLException {
+        pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback feedback = getFeedback(diseaseId, imageId, SQL_SELECT_IMAGE_FEEDBACK);
+        if(increment) {
+            feedback.incrementImplicitFeedback();
+        } else {
+            feedback.decrementImplicitFeedback();
+        }
+        return updateFeedback(feedback, SQL_UPDATE_IMAGE_FEEDBACK);
+    }
+
+    public boolean updateTweetFeedback(int diseaseId, int tweetId, boolean increment) throws SQLException {
+        pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback feedback = getFeedback(diseaseId, tweetId, SQL_SELECT_TWEET_FEEDBACK);
+        if(increment) {
+            feedback.incrementImplicitFeedback();
+        } else {
+            feedback.decrementImplicitFeedback();
+        }
+        return updateFeedback(feedback, SQL_UPDATE_TWEET_FEEDBACK);
+    }
+
 
     ///////////////////////////////////////  TWEETS //////////////////////////////////////////////////
     public List<Tweet> getAllTweets() throws SQLException{
@@ -489,6 +585,26 @@ public class DiseaseCatalog {
         }
     }
 
+    public List<FullTweet> getFullTweetsByDiseaseId(String diseaseId) throws SQLException {
+        ArrayList<FullTweet> results = new ArrayList<>();
+        PreparedStatement preparedStatement = conn.prepareStatement(SQL_SELECT_TWEETS_BY_DISEASE_ID);
+        preparedStatement.setString(1, diseaseId);
+        try (ResultSet result = preparedStatement.executeQuery()) {
+            while (result.next()) {
+                int id = result.getInt("id");
+                String url = result.getString("url");
+                String text = result.getString("text");
+                Date pubDate = result.getDate("pub_date");
+                int idOriginalDisease = result.getInt("id_original_disease");
+                int relevance = result.getInt("relevance");
+                int implicitFeedback = result.getInt("implicit_feedback");
+                int explicitFeedback = result.getInt("explicit_feedback");
+                results.add(new FullTweet(id, url, text, pubDate, idOriginalDisease, implicitFeedback, explicitFeedback, relevance));
+            }
+        }
+        return results;
+    }
+
     ///////////////////////////////////////  IMAGES //////////////////////////////////////////////////
     public Image createImage(Disease disease, String url) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(SQL_INSERT_IMAGE, Statement.RETURN_GENERATED_KEYS);
@@ -517,6 +633,22 @@ public class DiseaseCatalog {
         throw new SQLException("Retrieving generated id failed.");
     }
 
+    public List<FullImage> getFullImagesByDiseaseId(String diseaseId) throws SQLException {
+        ArrayList<FullImage> results = new ArrayList<>();
+        PreparedStatement preparedStatement = conn.prepareStatement(SQL_SELECT_IMAGES_BY_DISEASE_ID);
+        preparedStatement.setString(1, diseaseId);
+        try (ResultSet result = preparedStatement.executeQuery()) {
+            while (result.next()) {
+                int id = result.getInt("id");
+                String url = result.getString("url");
+                boolean blackListed = result.getBoolean("black_listed");
+                int implicitFeedback = result.getInt("implicit_feedback");
+                int explicitFeedback = result.getInt("explicit_feedback");
+                results.add(new FullImage(id, url, implicitFeedback, explicitFeedback, blackListed));
+            }
+        }
+        return results;
+    }
 
     /////////////////////////////////////////////FEEDBACK//////////////////////////////////////////////
     public Feedback getPubMedMaxFeedback(int diseaseID) throws SQLException {

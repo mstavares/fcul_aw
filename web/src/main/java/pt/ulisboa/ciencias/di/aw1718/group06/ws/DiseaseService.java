@@ -1,9 +1,13 @@
-package pt.ulisboa.ciencias.di.aw1718.group06.ws.services;
+package pt.ulisboa.ciencias.di.aw1718.group06.ws;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.FullDisease;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.FullImage;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.FullPubMed;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.FullTweet;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -20,7 +24,6 @@ public class DiseaseService {
     private static final String CONFIG_FILE_NAME = "config.properties";
     private DiseaseCatalog diseaseCatalog;
 
-
     public DiseaseService() {
         try {
             diseaseCatalog = new DiseaseCatalog(CONFIG_FILE_NAME);
@@ -28,6 +31,7 @@ public class DiseaseService {
             LOG.error("Error while connecting to database: " + e.getErrorCode(), e);
         }
     }
+
 
     @GET
     @Path("/get_all/{limit}")
@@ -43,11 +47,21 @@ public class DiseaseService {
         return diseaseCatalog.getFragmentDiseases(fragment);
     }
 
+
     @GET
-    @Path("/get_disease/{name}")
+    @Path("/get_full_disease/{id}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Object getDiseaseDetail(@PathParam("name") String name) {
-        return null;
+    public Object getFullDisease(@PathParam("id") String diseaseId) throws SQLException {
+        return buildFullDisease(diseaseId);
+    }
+
+    private FullDisease buildFullDisease(String diseaseId) throws SQLException {
+        Disease disease = diseaseCatalog.getDisease(diseaseId);
+        List<FullPubMed> pubMeds = diseaseCatalog.getFullPubmedsByDiseaseId(diseaseId);
+        List<FullTweet> tweets = diseaseCatalog.getFullTweetsByDiseaseId(diseaseId);
+        List<FullImage> images = diseaseCatalog.getFullImagesByDiseaseId(diseaseId);
+        return new FullDisease(disease.getId(), disease.getName(), disease.getDiseaseAbstract(), disease.getDerivedFrom(),
+                pubMeds, images, tweets);
     }
 
 }

@@ -2,9 +2,8 @@ package pt.ulisboa.ciencias.di.aw1718.group06.crawler.crawlers;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Disease;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Tweet;
 import twitter4j.Query;
 import twitter4j.QueryResult;
 import twitter4j.Status;
