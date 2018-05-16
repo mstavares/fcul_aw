@@ -1,5 +1,6 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.crawler.startup;
 
+import com.google.common.collect.ImmutableMap;
 import com.mysql.cj.jdbc.MysqlDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +9,9 @@ import pt.ulisboa.ciencias.di.aw1718.group06.crawler.crawlers.DbPediaCrawler;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.crawlers.PubMedCrawler;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.crawlers.FlickrCrawler;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.crawlers.TwitterCrawler;
+import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.CompoundRanker;
+import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.Index;
+import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.RankType;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.PubMed;
@@ -69,7 +73,7 @@ public class Main {
             if (singleDisease != null) {
             	Disease d = catalog.getDisease(singleDisease);
             	if (d != null) {
-            		diseases = new ArrayList<Disease>();
+            		diseases = new ArrayList<>();
             		diseases.add(d);
             	}else {
             		logger.info("Couldn't find the disease " + singleDisease);
@@ -175,9 +179,21 @@ public class Main {
             		}
             	}
             }
-            
-            
-            //TODO should call something to compute and store tf and idf in tables
+
+
+            // Build inverted index.
+            CompoundRanker ranker = new CompoundRanker(ImmutableMap.of(
+				RankType.TF_IDF_RANK, 0.3,
+				RankType.DATE_RANK, 0.1,
+				RankType.EXPLICIT_FEEDBACK_RANK, 0.4,
+				RankType.IMPLICIT_FEEDBACK_RANK, 0.2
+			));
+
+			Index index = new Index(ranker, catalog);
+			index.build();
+
+
+
 
         } catch (SQLException e) {
             logger.error("Error while connecting to database: " + e.getErrorCode(), e);

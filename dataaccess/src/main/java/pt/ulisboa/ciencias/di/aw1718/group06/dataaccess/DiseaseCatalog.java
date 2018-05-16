@@ -8,7 +8,9 @@ import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DiseaseCatalog {
 
@@ -18,21 +20,24 @@ public class DiseaseCatalog {
 	private static final String SQL_SELECT_ALL_DISEASES = "SELECT * FROM diseases";
 	private static final String SQL_SELECT_SINGLE_DISEASE = "SELECT * FROM diseases WHERE name = ?";
 	private static final String SQL_SELECT_ID_BY_NAME = "SELECT id FROM diseases WHERE name=?";
-	private static final String SQL_INSERT_DISEASE = "INSERT INTO diseases (name, abstract, was_derived_from) VALUES (?, ?, ?)";   
+	private static final String SQL_INSERT_DISEASE = "INSERT INTO diseases (name, abstract, was_derived_from) VALUES (?, ?, ?)";
 	private static final String SQL_COUNT_DISEASES = "SELECT COUNT(*) FROM diseases";
 	private static final String SQL_SELECT_DISEASE_IDF = "SELECT idf FROM diseases WHERE id = ?";
+	private static final String SQL_SELECT_ALL_IDFS = "SELECT id, idf FROM diseases";
 	private static final String SQL_UPDATE_DISEASE_IDF = "UPDATE diseases SET idf = ? WHERE id = ?";
-	
+
 	/*  TWEETS  */
 	private static final String SQL_INSERT_TWEET = "INSERT INTO tweets (url, text, pub_date, id_original_disease) VALUES (?, ?, ?, ?)";
 	private static final String SQL_SELECT_ALL_TWEETS = "SELECT * FROM tweets";
 
 	/*  PUBMED  */
 	private static final String SQL_SELECT_ALL_PUBMEDS = "SELECT * FROM pubmed";
+	private static final String SQL_SELECT_ALL_PUBMED_IDS = "SELECT id FROM pubmed";
 	private static final String SQL_SELECT_ID_BY_PUBMEDID = "SELECT id FROM pubmed WHERE pubmedID = ?";
+    private static final String SQL_SELECT_DATE_BY_PUBMEDID = "SELECT pub_date FROM pubmed WHERE pubmedID = ?";
 	private static final String SQL_INSERT_PUBMED = "INSERT INTO pubmed (pubmedID, title, abstract, pub_date, id_original_disease) VALUES (?, ?, ?, ?, ?)";
 	private static final String SQL_INSERT_PUBMED_DISEASE_LINKING = "INSERT INTO diseases_pubmed (id_diseases, id_pubmed, occurrences) VALUES (?, ?, ?)";
-	
+
 	/*  IMAGES  */
 	private static final String SQL_INSERT_IMAGE = "INSERT INTO images (url) VALUES (?)";
 	private static final String SQL_INSERT_IMAGE_DISEASE_LINKING = "INSERT INTO diseases_images (id_diseases, id_images) VALUES (?, ?)";
@@ -40,21 +45,21 @@ public class DiseaseCatalog {
 	/*  DISEASES_PUBMED  */
 	private static final String SQL_SELECT_PAIR_DISEASEID_PUBMEDID = "SELECT * FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_SELECT_PUBMED_RELATED_DISEASES = "SELECT d.name FROM diseases d, diseases_pubmed dp WHERE d.id=dp.id_diseases AND dp.id_pubmed = ?";
+	private static final String SQL_SELECT_PUBMED_RELATED_DISEASE_IDS = "SELECT id_diseases FROM diseases_pubmed WHERE id_pubmed = ?";
 	private static final String SQL_SELECT_DISEASE_OCCURRENCES_IN_PUBMED = "SELECT occurrences FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_SELECT_ALL_OCCURRENCES_IN_PUBMED = "SELECT SUM(occurrences) FROM diseases_pubmed WHERE id_pubmed = ?";
-	private static final String SQL_UPDATE_PUBMED_RANK = "UPDATE diseases_pubmed SET rank = ? WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_UPDATE_PUBMED_OCCURRENCES = "UPDATE diseases_pubmed SET occurrences = ? WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_SELECT_DISEASE_PUBMED_TF = "SELECT tf FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_UPDATE_DISEASE_PUBMED_TF = "UPDATE diseases_pubmed SET tf = ? WHERE id_diseases = ? AND id_pubmed = ?";
-	
+
 	/*  DISEASES_TWEETS*/
-	private static final String SQL_UPDATE_TWEET_RANK = "UPDATE diseases_tweets SET rank = ? WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_SELECT_PAIR_DISEASEID_TWEETID = "SELECT * FROM diseases_tweets WHERE id_diseases = ? AND id_tweets = ?";
 	private static final String SQL_INSERT_TWEET_DISEASE_LINKING = "INSERT INTO diseases_tweets (id_diseases, id_tweets) VALUES (?, ?)";
-	
+
 	/* FEEDBACK QUERIES */
+    private static final String SQL_GET_PUBMED_DISEASE_FEEDBACK = "SELECT implicit_feedback, explicit_feedback FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_GET_PUBMED_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_pubmed WHERE id_diseases = ?";
-	private static final String SQL_GET_TWEET_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_tweets WHERE id_diseases = ?";	
+	private static final String SQL_GET_TWEET_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_tweets WHERE id_diseases = ?";
 	private static final String SQL_GET_IMAGE_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_images WHERE id_diseases = ?";
 
 	public DiseaseCatalog(Connection connection) {
@@ -93,8 +98,9 @@ public class DiseaseCatalog {
 		Statement stmt = conn.createStatement();
 		String query = SQL_SELECT_ALL_DISEASES;
 
-		if (limit > 0)
-			query += " LIMIT " + limit;
+        if (limit > 0) {
+            query += " LIMIT " + limit;
+        }
 
 		try (ResultSet result = stmt.executeQuery(query)) {
 			while (result.next()) {
@@ -236,18 +242,19 @@ public class DiseaseCatalog {
 		}
 		return occurrences;
 	}
-	
+
 	public int getAllOccurrences(int pubmedID) throws SQLException {
 		PreparedStatement statement = conn.prepareStatement(SQL_SELECT_ALL_OCCURRENCES_IN_PUBMED);
 		statement.setInt(1, pubmedID);
 		int occurrences = -1;
 		try(ResultSet keys = statement.executeQuery()){
-			if(keys.next())
-				occurrences = keys.getInt(1);
+			if(keys.next()) {
+			    occurrences = keys.getInt(1);
+            }
 		}
 		return occurrences;
 	}
-	
+
 	public List<PubMed> getAllPubMed() throws SQLException {
 		ArrayList<PubMed> pubmeds = new ArrayList<>();
 		Statement stmt = conn.createStatement();
@@ -262,20 +269,19 @@ public class DiseaseCatalog {
 		}
 		return pubmeds;
 	}
-	
-	public boolean updatePubMedRank(int diseaseId, int pubmedId, double ranking) throws SQLException {
-		PreparedStatement statement = conn.prepareStatement(SQL_UPDATE_PUBMED_RANK);
-		statement.setDouble(1, ranking);
-		statement.setInt(2, diseaseId);
-		statement.setInt(3, pubmedId);
 
-		int affected = statement.executeUpdate();
-		if (affected == 0) {
-			throw new SQLException("Updating entry failed, no rows affected.");
+	public List<Integer> getAllPubMedIds() throws SQLException {
+		List<Integer> pubmeds = new ArrayList<>();
+		Statement stmt = conn.createStatement();
+		try(ResultSet result = stmt.executeQuery(SQL_SELECT_ALL_PUBMED_IDS)){
+			while(result.next()) {
+				int id = result.getInt("id");
+				pubmeds.add(id);
+			}
 		}
-		return true;
+		return pubmeds;
 	}
-	
+
 	public List<String> getRelatedDiseases(int id) throws SQLException {
 		ArrayList<String> diseases = new ArrayList<>();
 		PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_PUBMED_RELATED_DISEASES);
@@ -288,24 +294,54 @@ public class DiseaseCatalog {
 		}
 		return diseases;
 	}
-	
-	public double getTf(int diseaseID, int pubmedID) throws SQLException {
-		PreparedStatement statement = conn.prepareStatement(SQL_SELECT_DISEASE_PUBMED_TF, Statement.RETURN_GENERATED_KEYS);
-		statement.setInt(1, diseaseID);
-		statement.setInt(2, pubmedID);
-		double tf = -1;
-		try(ResultSet keys = statement.executeQuery()){
-			if(keys.next())
-				tf = keys.getInt(1);
-		}
-		return tf;
-	}
-	
-	public boolean updateDiseasePubmedTf(int diseaseID, int pubmedID, double tf) throws SQLException {
-		PreparedStatement statement = conn.prepareStatement(SQL_UPDATE_DISEASE_PUBMED_TF);
-		statement.setDouble(1, tf);
-		statement.setInt(2, diseaseID);
-		statement.setInt(3, pubmedID);
+
+    public List<Integer> getRelatedDiseaseIds(int pubMedId) throws SQLException {
+        List<Integer> diseases = new ArrayList<>();
+        PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_PUBMED_RELATED_DISEASE_IDS);
+        stmt.setInt(1, pubMedId);
+        try (ResultSet result = stmt.executeQuery()) {
+            while (result.next()) {
+                int id = result.getInt("id_diseases");
+                diseases.add(id);
+            }
+        }
+        return diseases;
+    }
+
+    public Date getPubMedDate(int pubmedId) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(SQL_SELECT_DATE_BY_PUBMEDID, Statement.RETURN_GENERATED_KEYS);
+        statement.setInt(1, pubmedId);
+        Date date = new Date(0);
+        try (ResultSet result = statement.executeQuery()) {
+            if (result.next()) {
+                date = result.getDate(1);
+            }
+        }
+        return date;
+    }
+
+    public double getTf(int diseaseID, int pubmedID) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(SQL_SELECT_DISEASE_PUBMED_TF, Statement.RETURN_GENERATED_KEYS);
+        statement.setInt(1, diseaseID);
+        statement.setInt(2, pubmedID);
+        double tf = -1;
+        try (ResultSet keys = statement.executeQuery()) {
+            if (keys.next()) {
+                tf = keys.getInt(1);
+            }
+        }
+        return tf;
+    }
+
+    public boolean updateDiseasePubmedTf(int diseaseID, int pubmedID, double tf) throws SQLException {
+        return updateTf(diseaseID, pubmedID, tf, SQL_UPDATE_DISEASE_PUBMED_TF);
+    }
+
+    private boolean updateTf(int diseaseID, int pubmedID, double tf, String sqlUpdateTf) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(sqlUpdateTf);
+        statement.setDouble(1, tf);
+        statement.setInt(2, diseaseID);
+        statement.setInt(3, pubmedID);
 
 		int affected = statement.executeUpdate();
 		if (affected == 0) {
@@ -319,10 +355,22 @@ public class DiseaseCatalog {
 		statement.setInt(1, diseaseID);
 		double idf = -1;
 		try(ResultSet keys = statement.executeQuery()){
-			if(keys.next())
-				idf = keys.getInt(1);
+			if(keys.next()) {
+			    idf = keys.getInt(1);
+            }
 		}
 		return idf;
+	}
+
+	public Map<Integer, Double> getAllIdfs() throws SQLException {
+        Map<Integer, Double> dToIdf = new HashMap<>();
+        PreparedStatement statement = conn.prepareStatement(SQL_SELECT_ALL_IDFS, Statement.RETURN_GENERATED_KEYS);
+		try(ResultSet result = statement.executeQuery()){
+			while (result.next()) {
+                dToIdf.put(result.getInt("id"), result.getDouble("idf"));
+            }
+		}
+		return dToIdf;
 	}
 	
 	public boolean updateDiseaseIdf(int diseaseID, double idf) throws SQLException {
@@ -409,27 +457,14 @@ public class DiseaseCatalog {
 						throw new SQLException("Creating entry failed, no rows affected.");
 					}
 				}*/
-			}
-		}
-	}
-	
-	public boolean updateTweetRank(int diseaseId, int tweetId, double ranking) throws SQLException {
-		PreparedStatement statement = conn.prepareStatement(SQL_UPDATE_TWEET_RANK);
-		statement.setDouble(1, ranking);
-		statement.setInt(2, diseaseId);
-		statement.setInt(3, tweetId);
+            }
+        }
+    }
 
-		int affected = statement.executeUpdate();
-		if (affected == 0) {
-			throw new SQLException("Updating entry failed, no rows affected.");
-		}
-		return true;
-	}
-	
-	///////////////////////////////////////  IMAGES //////////////////////////////////////////////////
-	public Image createImage(Disease disease, String url) throws SQLException {
-		PreparedStatement statement = conn.prepareStatement(SQL_INSERT_IMAGE, Statement.RETURN_GENERATED_KEYS);
-		statement.setString(1, url);
+    ///////////////////////////////////////  IMAGES //////////////////////////////////////////////////
+    public Image createImage(Disease disease, String url) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(SQL_INSERT_IMAGE, Statement.RETURN_GENERATED_KEYS);
+        statement.setString(1, url);
 
 		int affected = statement.executeUpdate();
 		if (affected == 0) {
@@ -444,78 +479,58 @@ public class DiseaseCatalog {
 				stmt.setInt(1, disease.getId());
 				stmt.setInt(2, id);
 
-				affected = stmt.executeUpdate();
-				if (affected == 0) {
-					throw new SQLException("Creating entry failed, no rows affected.");
-				}
-				return new Image(id, url);
-			}
-		}
-		throw new SQLException("Retrieving generated id failed.");
-	}
-	
-	
-	/////////////////////////////////////////////FEEDBACK//////////////////////////////////////////////
-	public Feedback getPubMedMaxFeedback(int diseaseID) throws SQLException {
-		PreparedStatement statement = conn.prepareStatement(SQL_GET_PUBMED_DISEASE_MAX_FEEDBACK, Statement.RETURN_GENERATED_KEYS);
-		statement.setInt(1, diseaseID);
-		int implicit = 0,
-		    explicit = 0;
-		try(ResultSet keys = statement.executeQuery()){
-			if(keys.next()) {
-				implicit = keys.getInt(1);
-				explicit = keys.getInt(2);
-			}
-				
-		}
-		return new Feedback(implicit,explicit);
-	}
-	
-	public Feedback getTweetsMaxFeedback(int diseaseID) throws SQLException {
-		PreparedStatement statement = conn.prepareStatement(SQL_GET_TWEET_DISEASE_MAX_FEEDBACK, Statement.RETURN_GENERATED_KEYS);
-		statement.setInt(1, diseaseID);
-		int implicit = 0,
-		    explicit = 0;
-		try(ResultSet keys = statement.executeQuery()){
-			if(keys.next()) {
-				implicit = keys.getInt(1);
-				explicit = keys.getInt(2);
-			}
-				
-		}
-		return new Feedback(implicit,explicit);
-	}
-	
-	public Feedback getImageMaxFeedback(int diseaseID) throws SQLException {
-		PreparedStatement statement = conn.prepareStatement(SQL_GET_IMAGE_DISEASE_MAX_FEEDBACK, Statement.RETURN_GENERATED_KEYS);
-		statement.setInt(1, diseaseID);
-		int implicit = 0,
-		    explicit = 0;
-		try(ResultSet keys = statement.executeQuery()){
-			if(keys.next()) {
-				implicit = keys.getInt(1);
-				explicit = keys.getInt(2);
-			}
-				
-		}
-		return new Feedback(implicit,explicit);
-	}
-
-	
-
-	
-
-	
+                affected = stmt.executeUpdate();
+                if (affected == 0) {
+                    throw new SQLException("Creating entry failed, no rows affected.");
+                }
+                return new Image(id, url);
+            }
+        }
+        throw new SQLException("Retrieving generated id failed.");
+    }
 
 
-	
+    /////////////////////////////////////////////FEEDBACK//////////////////////////////////////////////
+    public Feedback getPubMedMaxFeedback(int diseaseID) throws SQLException {
+        return getMaxFeedbackFor(diseaseID, SQL_GET_PUBMED_DISEASE_MAX_FEEDBACK);
+    }
 
+    public Feedback getTweetsMaxFeedback(int diseaseID) throws SQLException {
+        return getMaxFeedbackFor(diseaseID, SQL_GET_TWEET_DISEASE_MAX_FEEDBACK);
+    }
 
-	
+    public Feedback getImageMaxFeedback(int diseaseID) throws SQLException {
+        return getMaxFeedbackFor(diseaseID, SQL_GET_IMAGE_DISEASE_MAX_FEEDBACK);
+    }
 
-	
+    private Feedback getMaxFeedbackFor(int diseaseID, String sqlGetMaxFeedback) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(sqlGetMaxFeedback, Statement.RETURN_GENERATED_KEYS);
+        statement.setInt(1, diseaseID);
+        int implicit = 0;
+        int explicit = 0;
+        try (ResultSet keys = statement.executeQuery()) {
+            if (keys.next()) {
+                implicit = keys.getInt(1);
+                explicit = keys.getInt(2);
+            }
 
-	
+        }
+        return new Feedback(implicit, explicit);
+    }
 
+    public Feedback getDiseasePubMedFeedback(int diseaseId, int pubmedId) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(SQL_GET_PUBMED_DISEASE_FEEDBACK, Statement.RETURN_GENERATED_KEYS);
+        statement.setInt(1, diseaseId);
+        statement.setInt(2, pubmedId);
+        int implicit = 0;
+        int explicit = 0;
+        try (ResultSet keys = statement.executeQuery()) {
+            if (keys.next()) {
+                implicit = keys.getInt(1);
+                explicit = keys.getInt(2);
+            }
 
+        }
+        return new Feedback(implicit, explicit);
+    }
 }
