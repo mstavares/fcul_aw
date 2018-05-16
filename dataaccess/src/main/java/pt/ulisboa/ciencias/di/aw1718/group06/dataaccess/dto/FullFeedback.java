@@ -1,6 +1,6 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto;
 
-public class Feedback {
+public class FullFeedback {
 
     public enum Operations { INCREMENT_IMPLICIT, INCREMENT_EXPLICIT, DECREMENT_IMPLICIT, DECREMENT_EXPLICIT }
     private int diseaseId;
@@ -8,7 +8,7 @@ public class Feedback {
     private int implicitFeedback;
     private int explicitFeedback;
     
-    public Feedback(int diseaseId, int objectId, int implicitFeedback, int explicitFeedback) {
+    public FullFeedback(int diseaseId, int objectId, int implicitFeedback, int explicitFeedback) {
         this.diseaseId = diseaseId;
         this.objectId = objectId;
         this.implicitFeedback = implicitFeedback;

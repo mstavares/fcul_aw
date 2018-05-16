@@ -1,16 +1,18 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.dataaccess;
 
+import com.mysql.cj.jdbc.MysqlDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.FullImage;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.FullPubMed;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.FullTweet;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.*;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Feedback;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Image;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.PubMed;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Tweet;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -18,15 +20,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DiseaseCatalog {
 
 	private static final Logger LOG = LoggerFactory.getLogger(DiseaseCatalog.class);
-	private Connection conn;
+	private Connection connection;
 
 	/*  DISEASES  */
 	private static final String SQL_SELECT_ALL_DISEASES = "SELECT * FROM diseases";
@@ -40,12 +39,14 @@ public class DiseaseCatalog {
 	private static final String SQL_UPDATE_DISEASE_IDF = "UPDATE diseases SET idf = ? WHERE id = ?";
 
 	/*  TWEETS  */
+    private static final String SQL_COUNT_TWEETS = "SELECT COUNT(*) FROM tweets";
     private static final String SQL_INSERT_TWEET = "INSERT INTO tweets (url, text, pub_date, id_original_disease) VALUES (?, ?, ?, ?)";
     private static final String SQL_SELECT_ALL_TWEETS = "SELECT * FROM tweets";
     private static final String SQL_SELECT_TWEETS_BY_DISEASE_ID = "SELECT * FROM tweets, diseases_tweets WHERE diseases_tweets.id_diseases = ? AND tweets.id = diseases_tweets.id_tweets;";
     private static final String SQL_INSERT_TWEET_DISEASE_LINKING = "INSERT INTO diseases_tweets (id_diseases, id_tweets, id_original_disease) VALUES (?, ?, ?)";
 
 	/*  PUBMED  */
+    private static final String SQL_COUNT_PUBMEDS = "SELECT COUNT(*) FROM pubmed";
 	private static final String SQL_SELECT_PUBMEDS_BY_DISEASE_ID = "SELECT * FROM pubmed, diseases_pubmed WHERE diseases_pubmed.id_diseases = ? AND pubmed.id = diseases_pubmed.id_pubmed;";
 	private static final String SQL_SELECT_ALL_PUBMEDS = "SELECT * FROM pubmed";
 	private static final String SQL_SELECT_ALL_PUBMED_IDS = "SELECT id FROM pubmed";
@@ -55,6 +56,7 @@ public class DiseaseCatalog {
 	private static final String SQL_INSERT_PUBMED_DISEASE_LINKING = "INSERT INTO diseases_pubmed (id_diseases, id_pubmed, occurrences) VALUES (?, ?, ?)";
 
 	/*  IMAGES  */
+    private static final String SQL_COUNT_IMAGES = "SELECT COUNT(*) FROM images";
 	private static final String SQL_SELECT_IMAGES_BY_DISEASE_ID = "SELECT * FROM images, diseases_images WHERE diseases_images.id_diseases = ? AND images.id = diseases_images.id_images;";
 	private static final String SQL_INSERT_IMAGE = "INSERT INTO images (url) VALUES (?)";
 	private static final String SQL_INSERT_IMAGE_DISEASE_LINKING = "INSERT INTO diseases_images (id_diseases, id_images) VALUES (?, ?)";
@@ -86,14 +88,37 @@ public class DiseaseCatalog {
 	private static final String SQL_GET_TWEET_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_tweets WHERE id_diseases = ?";
 	private static final String SQL_GET_IMAGE_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_images WHERE id_diseases = ?";
 
-	public DiseaseCatalog(Connection connection) {
-		this.conn = connection;
-	}
+    public DiseaseCatalog(String configFileName) throws SQLException {
+        MysqlDataSource dataSource = getDataSourceFromConfig(configFileName);
+        connection = dataSource.getConnection();
+    }
+
+    private MysqlDataSource getDataSourceFromConfig(String configFileName) {
+        MysqlDataSource dataSource;
+        try (InputStream input = this.getClass().getClassLoader().getResourceAsStream(configFileName)) {
+            LOG.info("Reading properties from file: {}.", configFileName);
+            Properties props = new Properties();
+            props.load(input);
+            dataSource = new MysqlDataSource();
+            dataSource.setUser(props.getProperty("db.user"));
+            dataSource.setPassword(props.getProperty("db.password"));
+            dataSource.setServerName(props.getProperty("db.hostname"));
+            dataSource.setDatabaseName(props.getProperty("db.name"));
+            dataSource.setPort(Integer.valueOf(props.getProperty("db.port")));
+        } catch (FileNotFoundException e) {
+            LOG.error("Properties file not found.", e);
+            return null;
+        } catch (IOException e) {
+            LOG.error("Error while reading properties file.", e);
+            return null;
+        }
+        return dataSource;
+    }
 
 
 	///////////////////////////////////////  DISEASES //////////////////////////////////////////////////
 	public Disease addDisease(String name, String description, String derivedFrom) throws SQLException {
-		PreparedStatement statement = conn.prepareStatement(SQL_INSERT_DISEASE, Statement.RETURN_GENERATED_KEYS);
+		PreparedStatement statement = connection.prepareStatement(SQL_INSERT_DISEASE, Statement.RETURN_GENERATED_KEYS);
 		statement.setString(1, name);
 		statement.setString(2, description);
 		statement.setString(3, derivedFrom);
@@ -119,7 +144,7 @@ public class DiseaseCatalog {
 
 	public List<Disease> getDiseases(int limit) throws SQLException {
 		ArrayList<Disease> results = new ArrayList<>();
-		Statement stmt = conn.createStatement();
+		Statement stmt = connection.createStatement();
 		String query = SQL_SELECT_ALL_DISEASES;
 
         if (limit > 0) {
@@ -141,7 +166,7 @@ public class DiseaseCatalog {
 	public List<Disease> getFragmentDiseases(String fragment) throws SQLException {
 		ArrayList<Disease> results = new ArrayList<>();
 		String query = SQL_SELECT_FRAGMENT_DISEASES;
-		PreparedStatement preparedStatement = conn.prepareStatement(query);
+		PreparedStatement preparedStatement = connection.prepareStatement(query);
 		preparedStatement.setString(1, "%" + fragment + "%");
 		try (ResultSet result = preparedStatement.executeQuery()) {
 			while (result.next()) {
@@ -158,7 +183,7 @@ public class DiseaseCatalog {
 	public Disease getDisease(String searchTerm) throws SQLException {
 		Disease disease = null;
 
-		PreparedStatement statement = conn.prepareStatement(SQL_SELECT_SINGLE_DISEASE_BY_NAME);
+		PreparedStatement statement = connection.prepareStatement(SQL_SELECT_SINGLE_DISEASE_BY_NAME);
 		statement.setString(1, searchTerm);
 		statement.setString(2, searchTerm);
 
@@ -175,7 +200,7 @@ public class DiseaseCatalog {
 	}
 
     public int getDiseaseID(String diseaseName) throws SQLException {
-        PreparedStatement statement = conn.prepareStatement(SQL_SELECT_ID_BY_NAME, Statement.RETURN_GENERATED_KEYS);
+        PreparedStatement statement = connection.prepareStatement(SQL_SELECT_ID_BY_NAME, Statement.RETURN_GENERATED_KEYS);
         statement.setString(1, diseaseName);
         int id = -1;
         try(ResultSet keys = statement.executeQuery()){
@@ -187,7 +212,7 @@ public class DiseaseCatalog {
 
     public int getNumDiseases() throws SQLException {
         int count = 0;
-        Statement statement = conn.createStatement();
+        Statement statement = connection.createStatement();
         try(ResultSet result = statement.executeQuery(SQL_COUNT_DISEASES)){
             if(result.next())
                 count = result.getInt(1);
@@ -198,7 +223,7 @@ public class DiseaseCatalog {
 	///////////////////////////////////////  PUBMED //////////////////////////////////////////////////
 	public PubMed addPubMedInfo(int diseaseID, int pubmedID, String title, String abstrct, Date date) throws SQLException {
 
-		PreparedStatement statement = conn.prepareStatement(SQL_SELECT_ID_BY_PUBMEDID, Statement.RETURN_GENERATED_KEYS);
+		PreparedStatement statement = connection.prepareStatement(SQL_SELECT_ID_BY_PUBMEDID, Statement.RETURN_GENERATED_KEYS);
 		statement.setString(1, String.valueOf(pubmedID));
 		try(ResultSet keys = statement.executeQuery()){
 			boolean exists = keys.next();
@@ -210,7 +235,7 @@ public class DiseaseCatalog {
 				addPubMedDiseaseLink(diseaseID, id, 1);
 				return new PubMed(id, pubmedID, title, abstrct);
 			} else {
-				statement = conn.prepareStatement(SQL_INSERT_PUBMED, Statement.RETURN_GENERATED_KEYS);
+				statement = connection.prepareStatement(SQL_INSERT_PUBMED, Statement.RETURN_GENERATED_KEYS);
 				statement.setInt(1, pubmedID);
 				statement.setString(2, title);
 				statement.setString(3, abstrct);
@@ -237,7 +262,7 @@ public class DiseaseCatalog {
 
 	public void addPubMedDiseaseLink(int diseaseID, int id, int occurrences) throws SQLException {
 
-		PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_PAIR_DISEASEID_PUBMEDID, Statement.RETURN_GENERATED_KEYS);
+		PreparedStatement stmt = connection.prepareStatement(SQL_SELECT_PAIR_DISEASEID_PUBMEDID, Statement.RETURN_GENERATED_KEYS);
 		stmt.setInt(1, diseaseID);
 		stmt.setInt(2, id);
 		boolean exists = false;
@@ -245,7 +270,7 @@ public class DiseaseCatalog {
 			exists = keys.next();
 
 			if(!exists) { // pair (id_diseases,id_pubmed) doesnt exist 
-				PreparedStatement insertLinking = conn.prepareStatement(SQL_INSERT_PUBMED_DISEASE_LINKING, Statement.RETURN_GENERATED_KEYS);
+				PreparedStatement insertLinking = connection.prepareStatement(SQL_INSERT_PUBMED_DISEASE_LINKING, Statement.RETURN_GENERATED_KEYS);
 				insertLinking.setInt(1, diseaseID);
 				insertLinking.setInt(2, id);
 				insertLinking.setInt(3, occurrences);
@@ -260,7 +285,7 @@ public class DiseaseCatalog {
 				if(occurrences > oldOccurrences) {
 					//to prevent setting occurrences to 1 when it was already >1
 					//for 'new' diseases
-					PreparedStatement updateOccurrences = conn.prepareStatement(SQL_UPDATE_PUBMED_OCCURRENCES);
+					PreparedStatement updateOccurrences = connection.prepareStatement(SQL_UPDATE_PUBMED_OCCURRENCES);
 					updateOccurrences.setInt(1, occurrences);
 					updateOccurrences.setInt(2, id_disease);
 					updateOccurrences.setInt(3, id_pubmed);
@@ -274,7 +299,7 @@ public class DiseaseCatalog {
 	}
 
     public int getDiseaseOccurrences(int diseaseID, int pubmedID) throws SQLException {
-        PreparedStatement statement = conn.prepareStatement(SQL_SELECT_DISEASE_OCCURRENCES_IN_PUBMED);
+        PreparedStatement statement = connection.prepareStatement(SQL_SELECT_DISEASE_OCCURRENCES_IN_PUBMED);
         statement.setInt(1, diseaseID);
         statement.setInt(2, pubmedID);
         int occurrences = -1;
@@ -286,7 +311,7 @@ public class DiseaseCatalog {
     }
 
     public int getAllOccurrences(int pubmedID) throws SQLException {
-        PreparedStatement statement = conn.prepareStatement(SQL_SELECT_ALL_OCCURRENCES_IN_PUBMED);
+        PreparedStatement statement = connection.prepareStatement(SQL_SELECT_ALL_OCCURRENCES_IN_PUBMED);
         statement.setInt(1, pubmedID);
         int occurrences = -1;
         try(ResultSet keys = statement.executeQuery()){
@@ -299,7 +324,7 @@ public class DiseaseCatalog {
 
 	public List<PubMed> getAllPubMed() throws SQLException {
 		ArrayList<PubMed> pubmeds = new ArrayList<>();
-		Statement stmt = conn.createStatement();
+		Statement stmt = connection.createStatement();
 		try(ResultSet result = stmt.executeQuery(SQL_SELECT_ALL_PUBMEDS)){
 			while(result.next()) {
 				int id = result.getInt("id");
@@ -314,7 +339,7 @@ public class DiseaseCatalog {
 
 	public List<FullPubMed> getFullPubmedsByDiseaseId(String diseaseId) throws SQLException {
 		ArrayList<FullPubMed> results = new ArrayList<>();
-		PreparedStatement preparedStatement = conn.prepareStatement(SQL_SELECT_PUBMEDS_BY_DISEASE_ID);
+		PreparedStatement preparedStatement = connection.prepareStatement(SQL_SELECT_PUBMEDS_BY_DISEASE_ID);
 		preparedStatement.setString(1, diseaseId);
 		try (ResultSet result = preparedStatement.executeQuery()) {
 			while (result.next()) {
@@ -326,7 +351,7 @@ public class DiseaseCatalog {
 				int relevance = result.getInt("relevance");
 				int implicitFeedback = result.getInt("implicit_feedback");
 				int explicitFeedback = result.getInt("explicit_feedback");
-				results.add(new FullPubMed(id, pubMedId, title, description, idOriginalDisease, implicitFeedback, explicitFeedback, relevance));
+				results.add(new FullPubMed(id, pubMedId, title, description, idOriginalDisease, implicitFeedback, explicitFeedback));
 			}
 		}
 		return results;
@@ -334,7 +359,7 @@ public class DiseaseCatalog {
 
     public List<Integer> getAllPubMedIds() throws SQLException {
         List<Integer> pubmeds = new ArrayList<>();
-        Statement stmt = conn.createStatement();
+        Statement stmt = connection.createStatement();
         try(ResultSet result = stmt.executeQuery(SQL_SELECT_ALL_PUBMED_IDS)){
             while(result.next()) {
                 int id = result.getInt("id");
@@ -346,7 +371,7 @@ public class DiseaseCatalog {
 
     public List<String> getRelatedDiseases(int id) throws SQLException {
         ArrayList<String> diseases = new ArrayList<>();
-        PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_PUBMED_RELATED_DISEASES);
+        PreparedStatement stmt = connection.prepareStatement(SQL_SELECT_PUBMED_RELATED_DISEASES);
         stmt.setInt(1, id);
         try(ResultSet result = stmt.executeQuery()){
             while(result.next()) {
@@ -359,7 +384,7 @@ public class DiseaseCatalog {
 
     public List<Integer> getRelatedDiseaseIds(int pubMedId) throws SQLException {
         List<Integer> diseases = new ArrayList<>();
-        PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_PUBMED_RELATED_DISEASE_IDS);
+        PreparedStatement stmt = connection.prepareStatement(SQL_SELECT_PUBMED_RELATED_DISEASE_IDS);
         stmt.setInt(1, pubMedId);
         try (ResultSet result = stmt.executeQuery()) {
             while (result.next()) {
@@ -371,7 +396,7 @@ public class DiseaseCatalog {
     }
 
     public Date getPubMedDate(int pubmedId) throws SQLException {
-        PreparedStatement statement = conn.prepareStatement(SQL_SELECT_DATE_BY_PUBMEDID, Statement.RETURN_GENERATED_KEYS);
+        PreparedStatement statement = connection.prepareStatement(SQL_SELECT_DATE_BY_PUBMEDID, Statement.RETURN_GENERATED_KEYS);
         statement.setInt(1, pubmedId);
         Date date = new Date(0);
         try (ResultSet result = statement.executeQuery()) {
@@ -383,7 +408,7 @@ public class DiseaseCatalog {
     }
 
     public double getTf(int diseaseID, int pubmedID) throws SQLException {
-        PreparedStatement statement = conn.prepareStatement(SQL_SELECT_DISEASE_PUBMED_TF, Statement.RETURN_GENERATED_KEYS);
+        PreparedStatement statement = connection.prepareStatement(SQL_SELECT_DISEASE_PUBMED_TF, Statement.RETURN_GENERATED_KEYS);
         statement.setInt(1, diseaseID);
         statement.setInt(2, pubmedID);
         double tf = -1;
@@ -400,7 +425,7 @@ public class DiseaseCatalog {
     }
 
     private boolean updateTf(int diseaseID, int pubmedID, double tf, String sqlUpdateTf) throws SQLException {
-        PreparedStatement statement = conn.prepareStatement(sqlUpdateTf);
+        PreparedStatement statement = connection.prepareStatement(sqlUpdateTf);
         statement.setDouble(1, tf);
         statement.setInt(2, diseaseID);
         statement.setInt(3, pubmedID);
@@ -413,7 +438,7 @@ public class DiseaseCatalog {
     }
 
 	public double getIdf(int diseaseID) throws SQLException {
-		PreparedStatement statement = conn.prepareStatement(SQL_SELECT_DISEASE_IDF, Statement.RETURN_GENERATED_KEYS);
+		PreparedStatement statement = connection.prepareStatement(SQL_SELECT_DISEASE_IDF, Statement.RETURN_GENERATED_KEYS);
 		statement.setInt(1, diseaseID);
 		double idf = -1;
 		try(ResultSet keys = statement.executeQuery()){
@@ -426,7 +451,7 @@ public class DiseaseCatalog {
 
 	public Map<Integer, Double> getAllIdfs() throws SQLException {
         Map<Integer, Double> dToIdf = new HashMap<>();
-        PreparedStatement statement = conn.prepareStatement(SQL_SELECT_ALL_IDFS, Statement.RETURN_GENERATED_KEYS);
+        PreparedStatement statement = connection.prepareStatement(SQL_SELECT_ALL_IDFS, Statement.RETURN_GENERATED_KEYS);
 		try(ResultSet result = statement.executeQuery()){
 			while (result.next()) {
                 dToIdf.put(result.getInt("id"), result.getDouble("idf"));
@@ -436,7 +461,7 @@ public class DiseaseCatalog {
 	}
 
 	public boolean updateDiseaseIdf(int diseaseID, double idf) throws SQLException {
-		PreparedStatement statement = conn.prepareStatement(SQL_UPDATE_DISEASE_IDF);
+		PreparedStatement statement = connection.prepareStatement(SQL_UPDATE_DISEASE_IDF);
 		statement.setDouble(1, idf);
 		statement.setInt(2, diseaseID);
 
@@ -448,72 +473,82 @@ public class DiseaseCatalog {
     }
 
 
-    private pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback getFeedback(int diseaseId, int objectId, String query) throws SQLException {
-        PreparedStatement preparedStatement = conn.prepareStatement(query);
+    private FullFeedback getFeedback(int diseaseId, int objectId, String query) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
         preparedStatement.setInt(1, diseaseId);
         preparedStatement.setInt(2, objectId);
         try (ResultSet result = preparedStatement.executeQuery()) {
             if (result.next()) {
                 int implicitFeedback = result.getInt("implicit_feedback");
                 int explicitFeedback = result.getInt("explicit_feedback");
-                return new pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback(diseaseId, objectId, implicitFeedback, explicitFeedback);
+                return new FullFeedback(diseaseId, objectId, implicitFeedback, explicitFeedback);
             }
         }
         throw new SQLException("Instance not found");
     }
 
-    private boolean updateFeedback(pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback feedback, String query) throws SQLException {
-        PreparedStatement statement = conn.prepareStatement(query);
-        statement.setInt(1, feedback.getImplicitFeedback());
-        statement.setInt(2, feedback.getExplicitFeedback());
-        statement.setInt(3, feedback.getDiseaseId());
-        statement.setInt(4, feedback.getObjectId());
+    private boolean updateFeedback(FullFeedback fullFeedback, String query) throws SQLException {
+        PreparedStatement statement = connection.prepareStatement(query);
+        statement.setInt(1, fullFeedback.getImplicitFeedback());
+        statement.setInt(2, fullFeedback.getExplicitFeedback());
+        statement.setInt(3, fullFeedback.getDiseaseId());
+        statement.setInt(4, fullFeedback.getObjectId());
         return statement.executeUpdate() != 0;
     }
 
-    private void performFeedbackUpdate(pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback feedback, pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback.Operations operation) {
-        if(pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback.Operations.INCREMENT_IMPLICIT == operation) {
-            feedback.incrementImplicitFeedback();
-        } else if(pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback.Operations.INCREMENT_EXPLICIT == operation) {
-            feedback.incrementExplicitFeedback();
-        } else if(pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback.Operations.DECREMENT_IMPLICIT == operation) {
-            feedback.decrementImplicitFeedback();
+    private void performFeedbackUpdate(FullFeedback fullFeedback, FullFeedback.Operations operation) {
+        if(FullFeedback.Operations.INCREMENT_IMPLICIT == operation) {
+            fullFeedback.incrementImplicitFeedback();
+        } else if(FullFeedback.Operations.INCREMENT_EXPLICIT == operation) {
+            fullFeedback.incrementExplicitFeedback();
+        } else if(FullFeedback.Operations.DECREMENT_IMPLICIT == operation) {
+            fullFeedback.decrementImplicitFeedback();
         } else {
-            feedback.decrementExplicitFeedback();
+            fullFeedback.decrementExplicitFeedback();
         }
     }
 
-    public boolean updatePubMeFeedback(int diseaseId, int pubMedId, pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback.Operations operation) throws SQLException {
-        pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback feedback = getFeedback(diseaseId, pubMedId, SQL_SELECT_PUBMED_FEEDBACK);
+    public Statistic getStatistic() throws SQLException {
+        int numberOfDiseases = getNumberOf(SQL_COUNT_DISEASES);
+        int numberOfPubMeds = getNumberOf(SQL_COUNT_PUBMEDS);
+        int numberOfTweets = getNumberOf(SQL_COUNT_TWEETS);
+        int numberOfImages = getNumberOf(SQL_COUNT_IMAGES);
+        return new Statistic(numberOfDiseases, numberOfPubMeds, numberOfTweets, numberOfImages);
+    }
+
+    public int getNumberOf(String countQuery) throws SQLException {
+        int count = 0;
+        Statement statement = connection.createStatement();
+        try(ResultSet result = statement.executeQuery(countQuery)){
+            if(result.next())
+                count = result.getInt(1);
+        }
+        return count;
+    }
+
+    public boolean updatePubMedFeedback(int diseaseId, int pubMedId, FullFeedback.Operations operation) throws SQLException {
+        FullFeedback feedback = getFeedback(diseaseId, pubMedId, SQL_SELECT_PUBMED_FEEDBACK);
         performFeedbackUpdate(feedback, operation);
         return updateFeedback(feedback, SQL_UPDATE_PUBMED_FEEDBACK);
     }
 
-    public boolean updateImageFeedback(int diseaseId, int imageId, boolean increment) throws SQLException {
-        pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback feedback = getFeedback(diseaseId, imageId, SQL_SELECT_IMAGE_FEEDBACK);
-        if(increment) {
-            feedback.incrementImplicitFeedback();
-        } else {
-            feedback.decrementImplicitFeedback();
-        }
-        return updateFeedback(feedback, SQL_UPDATE_IMAGE_FEEDBACK);
+    public boolean updateTweetFeedback(int diseaseId, int tweetId, FullFeedback.Operations operation) throws SQLException {
+        FullFeedback feedback = getFeedback(diseaseId, tweetId, SQL_SELECT_TWEET_FEEDBACK);
+        performFeedbackUpdate(feedback, operation);
+        return updateFeedback(feedback, SQL_UPDATE_TWEET_FEEDBACK);
     }
 
-    public boolean updateTweetFeedback(int diseaseId, int tweetId, boolean increment) throws SQLException {
-        pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.Feedback feedback = getFeedback(diseaseId, tweetId, SQL_SELECT_TWEET_FEEDBACK);
-        if(increment) {
-            feedback.incrementImplicitFeedback();
-        } else {
-            feedback.decrementImplicitFeedback();
-        }
-        return updateFeedback(feedback, SQL_UPDATE_TWEET_FEEDBACK);
+    public boolean updateImageFeedback(int diseaseId, int imageId, FullFeedback.Operations operation) throws SQLException {
+        FullFeedback feedback = getFeedback(diseaseId, imageId, SQL_SELECT_IMAGE_FEEDBACK);
+        performFeedbackUpdate(feedback, operation);
+        return updateFeedback(feedback, SQL_UPDATE_IMAGE_FEEDBACK);
     }
 
 
     ///////////////////////////////////////  TWEETS //////////////////////////////////////////////////
     public List<Tweet> getAllTweets() throws SQLException{
         ArrayList<Tweet> tweets = new ArrayList<>();
-        Statement stmt = conn.createStatement();
+        Statement stmt = connection.createStatement();
         try(ResultSet result = stmt.executeQuery(SQL_SELECT_ALL_TWEETS)){
             while(result.next()) {
                 int id = result.getInt("id");
@@ -526,7 +561,7 @@ public class DiseaseCatalog {
     }
 
     public Tweet createTweet(Disease disease, long tweetId, String text, int originalDiseaseID, Date date) throws SQLException {
-        PreparedStatement statement = conn.prepareStatement(SQL_INSERT_TWEET, Statement.RETURN_GENERATED_KEYS);
+        PreparedStatement statement = connection.prepareStatement(SQL_INSERT_TWEET, Statement.RETURN_GENERATED_KEYS);
         statement.setString(1, String.valueOf(tweetId));
         statement.setString(2, text);
         statement.setDate(3, date);
@@ -548,7 +583,7 @@ public class DiseaseCatalog {
     }
 
     public void addDiseaseTweetLink(int diseaseId, int id) throws SQLException {
-        PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_PAIR_DISEASEID_TWEETID, Statement.RETURN_GENERATED_KEYS);
+        PreparedStatement stmt = connection.prepareStatement(SQL_SELECT_PAIR_DISEASEID_TWEETID, Statement.RETURN_GENERATED_KEYS);
         stmt.setInt(1, diseaseId);
         stmt.setInt(2, id);
         boolean exists = false;
@@ -557,7 +592,7 @@ public class DiseaseCatalog {
 
             if(!exists) {
                 // Add entry in linking table.
-                stmt = conn.prepareStatement(SQL_INSERT_TWEET_DISEASE_LINKING, Statement.RETURN_GENERATED_KEYS);
+                stmt = connection.prepareStatement(SQL_INSERT_TWEET_DISEASE_LINKING, Statement.RETURN_GENERATED_KEYS);
                 stmt.setInt(1, diseaseId);
                 stmt.setInt(2, id);
 
@@ -572,7 +607,7 @@ public class DiseaseCatalog {
 				if(occurrences > oldOccurrences) {
 					//to prevent setting occurrences to 1 when it was already >1
 					//for 'new' diseases
-					PreparedStatement updateOccurrences = conn.prepareStatement(SQL_UPDATE_TWEET_OCCURRENCES);
+					PreparedStatement updateOccurrences = connection.prepareStatement(SQL_UPDATE_TWEET_OCCURRENCES);
 					updateOccurrences.setInt(1, occurrences);
 					updateOccurrences.setInt(2, id_disease);
 					updateOccurrences.setInt(3, id_pubmed);
@@ -587,7 +622,7 @@ public class DiseaseCatalog {
 
     public List<FullTweet> getFullTweetsByDiseaseId(String diseaseId) throws SQLException {
         ArrayList<FullTweet> results = new ArrayList<>();
-        PreparedStatement preparedStatement = conn.prepareStatement(SQL_SELECT_TWEETS_BY_DISEASE_ID);
+        PreparedStatement preparedStatement = connection.prepareStatement(SQL_SELECT_TWEETS_BY_DISEASE_ID);
         preparedStatement.setString(1, diseaseId);
         try (ResultSet result = preparedStatement.executeQuery()) {
             while (result.next()) {
@@ -596,10 +631,9 @@ public class DiseaseCatalog {
                 String text = result.getString("text");
                 Date pubDate = result.getDate("pub_date");
                 int idOriginalDisease = result.getInt("id_original_disease");
-                int relevance = result.getInt("relevance");
                 int implicitFeedback = result.getInt("implicit_feedback");
                 int explicitFeedback = result.getInt("explicit_feedback");
-                results.add(new FullTweet(id, url, text, pubDate, idOriginalDisease, implicitFeedback, explicitFeedback, relevance));
+                results.add(new FullTweet(id, url, text, pubDate, idOriginalDisease, implicitFeedback, explicitFeedback));
             }
         }
         return results;
@@ -607,7 +641,7 @@ public class DiseaseCatalog {
 
     ///////////////////////////////////////  IMAGES //////////////////////////////////////////////////
     public Image createImage(Disease disease, String url) throws SQLException {
-        PreparedStatement statement = conn.prepareStatement(SQL_INSERT_IMAGE, Statement.RETURN_GENERATED_KEYS);
+        PreparedStatement statement = connection.prepareStatement(SQL_INSERT_IMAGE, Statement.RETURN_GENERATED_KEYS);
         statement.setString(1, url);
 
         int affected = statement.executeUpdate();
@@ -619,7 +653,7 @@ public class DiseaseCatalog {
             if (keys.next()) {
                 int id = keys.getInt(1);
                 // Add entry in linking table.
-                PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_IMAGE_DISEASE_LINKING, Statement.RETURN_GENERATED_KEYS);
+                PreparedStatement stmt = connection.prepareStatement(SQL_INSERT_IMAGE_DISEASE_LINKING, Statement.RETURN_GENERATED_KEYS);
                 stmt.setInt(1, disease.getId());
                 stmt.setInt(2, id);
 
@@ -635,16 +669,15 @@ public class DiseaseCatalog {
 
     public List<FullImage> getFullImagesByDiseaseId(String diseaseId) throws SQLException {
         ArrayList<FullImage> results = new ArrayList<>();
-        PreparedStatement preparedStatement = conn.prepareStatement(SQL_SELECT_IMAGES_BY_DISEASE_ID);
+        PreparedStatement preparedStatement = connection.prepareStatement(SQL_SELECT_IMAGES_BY_DISEASE_ID);
         preparedStatement.setString(1, diseaseId);
         try (ResultSet result = preparedStatement.executeQuery()) {
             while (result.next()) {
                 int id = result.getInt("id");
                 String url = result.getString("url");
-                boolean blackListed = result.getBoolean("black_listed");
                 int implicitFeedback = result.getInt("implicit_feedback");
                 int explicitFeedback = result.getInt("explicit_feedback");
-                results.add(new FullImage(id, url, implicitFeedback, explicitFeedback, blackListed));
+                results.add(new FullImage(id, url, implicitFeedback, explicitFeedback));
             }
         }
         return results;
@@ -664,7 +697,7 @@ public class DiseaseCatalog {
     }
 
     private Feedback getMaxFeedbackFor(int diseaseID, String sqlGetMaxFeedback) throws SQLException {
-        PreparedStatement statement = conn.prepareStatement(sqlGetMaxFeedback, Statement.RETURN_GENERATED_KEYS);
+        PreparedStatement statement = connection.prepareStatement(sqlGetMaxFeedback, Statement.RETURN_GENERATED_KEYS);
         statement.setInt(1, diseaseID);
         int implicit = 0;
         int explicit = 0;
@@ -679,7 +712,7 @@ public class DiseaseCatalog {
     }
 
     public Feedback getDiseasePubMedFeedback(int diseaseId, int pubmedId) throws SQLException {
-        PreparedStatement statement = conn.prepareStatement(SQL_GET_PUBMED_DISEASE_FEEDBACK, Statement.RETURN_GENERATED_KEYS);
+        PreparedStatement statement = connection.prepareStatement(SQL_GET_PUBMED_DISEASE_FEEDBACK, Statement.RETURN_GENERATED_KEYS);
         statement.setInt(1, diseaseId);
         statement.setInt(2, pubmedId);
         int implicit = 0;

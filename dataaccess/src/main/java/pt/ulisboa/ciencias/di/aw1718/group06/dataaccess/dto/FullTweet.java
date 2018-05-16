@@ -8,14 +8,16 @@ public class FullTweet extends Tweet {
 
     private Date pubDate;
     private int idOriginalDisease;
-    private int relevance;
+    private int implicitFeedback;
+    private int explicitFeedback;
 
 
-    public FullTweet(int id, String url, String description, Date pubDate, int idOriginalDisease, int implicitFeedBack, int explicitFeedBack, int relevance) {
-        super(id, url, description, implicitFeedBack, explicitFeedBack);
+    public FullTweet(int id, String url, String description, Date pubDate, int idOriginalDisease, int implicitFeedBack, int explicitFeedBack) {
+        super(id, url, description);
         this.pubDate = pubDate;
         this.idOriginalDisease = idOriginalDisease;
-        this.relevance = relevance;
+        this.implicitFeedback = implicitFeedBack;
+        this.explicitFeedback = explicitFeedBack;
 
     }
 
@@ -35,12 +37,28 @@ public class FullTweet extends Tweet {
         this.idOriginalDisease = idOriginalDisease;
     }
 
-    public int getRelevance() {
-        return relevance;
+    public int getImplicitFeedback() {
+        return implicitFeedback;
     }
 
-    public void setRelevance(int relevance) {
-        this.relevance = relevance;
+    public void incrementImplicitFeedback() {
+        implicitFeedback++;
+    }
+
+    public void decrementImplicitFeedback() {
+        implicitFeedback--;
+    }
+
+    public int getExplicitFeedback() {
+        return explicitFeedback;
+    }
+
+    public void incrementExplicitFeedback() {
+        explicitFeedback++;
+    }
+
+    public void decrementExplicitFeedback() {
+        explicitFeedback--;
     }
 
 }

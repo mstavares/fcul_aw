@@ -5,12 +5,14 @@ import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.PubMed;
 public class FullPubMed extends PubMed {
 
     private int idOriginalDisease;
-    private int relevance;
+    private int implicitFeedback;
+    private int explicitFeedback;
 
-    public FullPubMed(int id, int pubMedId, String title, String description, int idOriginalDisease, int relevance, int implicitFeedback, int explicitFeedback) {
+    public FullPubMed(int id, int pubMedId, String title, String description, int idOriginalDisease, int implicitFeedback, int explicitFeedback) {
         super(id, pubMedId, title, description);
         this.idOriginalDisease = idOriginalDisease;
-        this.relevance = relevance;
+        this.implicitFeedback = implicitFeedback;
+        this.explicitFeedback = explicitFeedback;
     }
 
 
@@ -22,12 +24,28 @@ public class FullPubMed extends PubMed {
         this.idOriginalDisease = idOriginalDisease;
     }
 
-    public int getRelevance() {
-        return relevance;
+    public int getImplicitFeedback() {
+        return implicitFeedback;
     }
 
-    public void setRelevance(int relevance) {
-        this.relevance = relevance;
+    public void incrementImplicitFeedback() {
+        implicitFeedback++;
+    }
+
+    public void decrementImplicitFeedback() {
+        implicitFeedback--;
+    }
+
+    public int getExplicitFeedback() {
+        return explicitFeedback;
+    }
+
+    public void incrementExplicitFeedback() {
+        explicitFeedback++;
+    }
+
+    public void decrementExplicitFeedback() {
+        explicitFeedback--;
     }
 
 }

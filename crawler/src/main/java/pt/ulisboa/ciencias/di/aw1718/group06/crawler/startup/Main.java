@@ -65,8 +65,8 @@ public class Main {
         System.setProperty("twitter4j.loggerFactory", "twitter4j.NullLoggerFactory");
         Twitter twitter = TwitterFactory.getSingleton();
 
-        try(Connection conn = dataSource.getConnection()) {
-            DiseaseCatalog catalog = new DiseaseCatalog(conn);
+        try {
+			DiseaseCatalog catalog = new DiseaseCatalog(CONFIG_FILE_NAME);
             
             List<Disease> diseases = catalog.getDiseases(limit);
             
