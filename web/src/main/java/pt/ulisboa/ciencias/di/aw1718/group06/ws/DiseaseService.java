@@ -1,10 +1,15 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.ws;
 
 import com.google.common.collect.ImmutableMap;
-import io.swagger.annotations.Api;
 import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.CompoundRanker;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.Index;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.IndexRank;
@@ -13,17 +18,12 @@ import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.*;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 import java.sql.SQLException;
 import java.util.List;
 
 
-@Path("/disease")
-@Api(value = "disease", description = "This WS provides information related with diseases")
+@RestController
+@RequestMapping("/disease")
 public class DiseaseService {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiseaseService.class);
@@ -50,31 +50,23 @@ public class DiseaseService {
         }
     }
 
-    @GET
-    @Path("/get_statistics")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    @RequestMapping(value = "/get_statistics", method = RequestMethod.GET, produces = "application/json")
     public Statistic getStatistics() throws SQLException {
         return diseaseCatalog.getStatistic();
     }
 
-    @GET
-    @Path("/get_all/{limit}")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<Disease> getAllDiseases(@PathParam("limit") int limit) throws SQLException {
+    @RequestMapping(value="/get_all/{limit}", method=RequestMethod.GET, produces="application/json")
+    public List<Disease> getAllDiseases(@PathVariable int limit) throws SQLException {
         return diseaseCatalog.getDiseases(limit);
     }
 
-    @GET
-    @Path("/get_by_name_fragment/{fragment}")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<Disease> getDiseasesByNameFragment(@PathParam("fragment") String fragment) throws SQLException {
-        return diseaseCatalog.getFragmentDiseases(fragment);
+    @RequestMapping(value="/get_by_name_fragment/{fragment}", method=RequestMethod.GET, produces="application/json")
+    public List<Disease> getDiseasesByNameFragment(@PathVariable String fragment) throws SQLException {
+       return diseaseCatalog.getFragmentDiseases(fragment);
     }
 
-    @GET
-    @Path("/get_full_disease/{id}")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public FullDisease getFullDisease(@PathParam("id") int diseaseId) throws SQLException {
+    @RequestMapping(value="/get/{id}", method=RequestMethod.GET, produces="application/json")
+    public FullDisease getFullDisease(@PathVariable int id) throws SQLException {
         return null;//buildFullDisease(diseaseId);
     }
 

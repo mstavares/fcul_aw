@@ -58,7 +58,7 @@ public class DiseaseCatalog {
 	private static final String SQL_SELECT_PUBMED_FEEDBACK = "SELECT * FROM diseases_pubmed WHERE id_diseases = ? AND pubmed.id = ?;";
 	private static final String SQL_UPDATE_PUBMED_FEEDBACK = "UPDATE diseases_pubmed SET implicit_feedback = ?, explicit_feedback = ? WHERE id_diseases = ? AND pubmed.id = ?;";
 	private static final String SQL_SELECT_PAIR_DISEASEID_PUBMEDID = "SELECT * FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
-	private static final String SQL_SELECT_PUBMED_RELATED_DISEASES = "SELECT d.name FROM diseases d, diseases_pubmed dp WHERE d.id=dp.id_diseases AND dp.id_pubmed = ?";
+	private static final String SQL_SELECT_PUBMED_RELATED_DISEASES = "SELECT d.id, d.name, dp.places FROM diseases d, diseases_pubmed dp WHERE d.id=dp.id_diseases AND dp.id_pubmed = ?";
 	private static final String SQL_SELECT_PUBMED_RELATED_DISEASE_IDS = "SELECT id_diseases FROM diseases_pubmed WHERE id_pubmed = ?";
 	private static final String SQL_SELECT_DISEASE_OCCURRENCES_IN_PUBMED = "SELECT occurrences FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_SELECT_ALL_OCCURRENCES_IN_PUBMED = "SELECT SUM(occurrences) FROM diseases_pubmed WHERE id_pubmed = ?";
@@ -592,6 +592,21 @@ public class DiseaseCatalog {
   		}
   		return places;
   	}
+    
+    public List<MentionedDiseasesDAO> getMentionedDiseases(int pubmedId) throws SQLException{
+    	ArrayList<MentionedDiseasesDAO> diseases = new ArrayList<>();
+        PreparedStatement stmt = connection.prepareStatement(SQL_SELECT_PUBMED_RELATED_DISEASES);
+        stmt.setInt(1, pubmedId);
+        try(ResultSet result = stmt.executeQuery()){
+            while(result.next()) {
+            	int id = result.getInt("id");
+                String name = result.getString("name");
+                String places = result.getString("places");
+                diseases.add(new MentionedDiseasesDAO(id, name, places));
+            }
+        }
+        return diseases;
+    }
 
 
     ///////////////////////////////////////  TWEETS //////////////////////////////////////////////////
