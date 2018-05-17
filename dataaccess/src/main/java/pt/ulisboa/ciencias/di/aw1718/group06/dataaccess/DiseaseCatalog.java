@@ -387,7 +387,8 @@ public class DiseaseCatalog {
 				int relevance = result.getInt("relevance");
 				int implicitFeedback = result.getInt("implicit_feedback");
 				int explicitFeedback = result.getInt("explicit_feedback");
-				results.add(new FullPubMed(id, pubMedId, title, description, idOriginalDisease, implicitFeedback, explicitFeedback));
+				
+				results.add(new FullPubMed(id, pubMedId, title, description, idOriginalDisease, implicitFeedback, explicitFeedback, getMentionedDiseases(id)));
 			}
 		}
 		return results;
