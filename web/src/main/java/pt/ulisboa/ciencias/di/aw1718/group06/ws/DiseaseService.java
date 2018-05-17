@@ -29,11 +29,22 @@ public class DiseaseService {
     private static final Logger LOG = LoggerFactory.getLogger(DiseaseService.class);
     private static final String CONFIG_FILE_NAME = "config.properties";
     private DiseaseCatalog diseaseCatalog;
+    private Index index;
 
 
     public DiseaseService() {
         try {
             diseaseCatalog = new DiseaseCatalog(CONFIG_FILE_NAME);
+
+            CompoundRanker ranker = new CompoundRanker(ImmutableMap.of(
+                RankType.TF_IDF_RANK, 0.3,
+                RankType.DATE_RANK, 0.1,
+                RankType.EXPLICIT_FEEDBACK_RANK, 0.4,
+                RankType.IMPLICIT_FEEDBACK_RANK, 0.2
+            ));
+            this.index = new Index(ranker, diseaseCatalog);
+            this.index.build();
+
         } catch (SQLException e) {
             LOG.error("Error while connecting to database: " + e.getErrorCode(), e);
         }
@@ -91,16 +102,7 @@ public class DiseaseService {
     }
 
     public List<Pair<Integer, IndexRank>> getRankedPubMeds(int diseaseId) throws SQLException {
-        CompoundRanker ranker = new CompoundRanker(ImmutableMap.of(
-                RankType.TF_IDF_RANK, 0.3,
-                RankType.DATE_RANK, 0.1,
-                RankType.EXPLICIT_FEEDBACK_RANK, 0.4,
-                RankType.IMPLICIT_FEEDBACK_RANK, 0.2
-        ));
-
-        Index index = new Index(ranker, diseaseCatalog);
-        index.build();
-        return index.getArticlesFor(diseaseId);
+        return this.index.getArticlesFor(diseaseId);
     }
 
 }
