@@ -64,7 +64,7 @@ public class DiseaseService {
     @Path("/get_full_disease/{id}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public FullDisease getFullDisease(@PathParam("id") int diseaseId) throws SQLException {
-        return buildFullDisease(diseaseId);
+        return null;//buildFullDisease(diseaseId);
     }
 
 
@@ -78,12 +78,16 @@ public class DiseaseService {
 
         // same for tweets and images
 
-        List<FullPubMed> pubMeds = diseaseCatalog.getFullPubmedsByDiseaseId(rankedPubMeds, start, limit);
-        List<FullTweet> tweets = diseaseCatalog.getFullTweetsByDiseaseId(diseaseId);
-        List<FullImage> images = diseaseCatalog.getFullImagesByDiseaseId(diseaseId);
+        /*
+        //List<FullPubMed> pubMeds = diseaseCatalog.getFullPubmedsByDiseaseId(rankedPubMeds, start, limit);
+        //List<FullTweet> tweets = diseaseCatalog.getFullTweetsByDiseaseId(diseaseId, start, limit);
+        //List<FullImage> images = diseaseCatalog.getFullImagesByDiseaseId((diseaseId, start, limit);
+
 
         return new FullDisease(disease.getId(), disease.getName(), disease.getDescription(), disease.getDerivedFrom(),
-                disease.getField(), disease.getDead(), pubMeds, images, tweets);
+                pubMeds, images, tweets);
+        */
+        return null;
     }
 
     public List<Pair<Integer, IndexRank>> getRankedPubMeds(int diseaseId) throws SQLException {
