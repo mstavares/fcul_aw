@@ -387,6 +387,7 @@ public class DiseaseCatalog {
 				String title = result.getString("title");
 				String description = result.getString("abstract");
 				int idOriginalDisease = result.getInt("id_original_disease");
+				int relevance = result.getInt("relevance");
 				int implicitFeedback = result.getInt("implicit_feedback");
 				int explicitFeedback = result.getInt("explicit_feedback");
 				

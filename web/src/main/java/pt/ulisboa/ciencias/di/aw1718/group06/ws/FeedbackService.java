@@ -30,17 +30,17 @@ public class FeedbackService {
         }
     }
 
-    @RequestMapping(value="/pubmed", method=RequestMethod.POST, produces="application/json")
+    @RequestMapping(value="/pubmed", method=RequestMethod.POST, produces= {"application/json", "application/xml"})
     public Boolean updatePubMedFeedback(@RequestParam int diseaseId, @RequestParam int pubmedId, @RequestParam int operation) throws SQLException {
         return diseaseCatalog.updatePubMedFeedback(diseaseId, pubmedId, FullFeedback.Operations.values()[operation]);
     }
 
-    @RequestMapping(value="/tweet", method=RequestMethod.POST, produces="application/json")
+    @RequestMapping(value="/tweet", method=RequestMethod.POST, produces= {"application/json", "application/xml"})
     public Boolean updateTweetFeedback(@RequestParam int diseaseId, @RequestParam int tweetId, @RequestParam int operation) throws SQLException {
         return diseaseCatalog.updateTweetFeedback(diseaseId, tweetId, FullFeedback.Operations.values()[operation]);
     }
 
-    @RequestMapping(value="/image", method=RequestMethod.POST, produces="application/json")
+    @RequestMapping(value="/image", method=RequestMethod.POST, produces= {"application/json", "application/xml"})
     public Boolean updateImageFeedback(@RequestParam int diseaseId, @RequestParam int imageId, @RequestParam int operation) throws SQLException {
         return diseaseCatalog.updateImageFeedback(diseaseId, imageId, FullFeedback.Operations.values()[operation]);
     }

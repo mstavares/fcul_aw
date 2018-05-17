@@ -4,7 +4,11 @@ import com.google.common.collect.ImmutableMap;
 import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.CompoundRanker;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.Index;
@@ -17,7 +21,6 @@ import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.ws.rs.core.MediaType;
 
 
 @RestController
@@ -33,42 +36,43 @@ public class DiseaseService {
     public DiseaseService() {
         try {
             diseaseCatalog = new DiseaseCatalog(CONFIG_FILE_NAME);
+
             CompoundRanker ranker = new CompoundRanker(ImmutableMap.of(
                 RankType.TF_IDF_RANK, 0.3,
                 RankType.DATE_RANK, 0.1,
                 RankType.EXPLICIT_FEEDBACK_RANK, 0.4,
                 RankType.IMPLICIT_FEEDBACK_RANK, 0.2
             ));
-            index = new Index(ranker, diseaseCatalog);
-            index.build();
+            this.index = new Index(ranker, diseaseCatalog);
+            this.index.build();
 
         } catch (SQLException e) {
             LOG.error("Error while connecting to database: " + e.getErrorCode(), e);
         }
     }
 
-    @RequestMapping(value = "/get_statistics", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @RequestMapping(value = "/get_statistics", method = RequestMethod.GET, produces = {"application/json", "application/xml"})
     public Statistic getStatistics() throws SQLException {
         return diseaseCatalog.getStatistic();
     }
 
-    @RequestMapping(value = "/get_all/{limit}", method=RequestMethod.GET, produces = {MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @RequestMapping(value="/get_all/{limit}", method=RequestMethod.GET, produces= {"application/json", "application/xml"})
     public List<Disease> getAllDiseases(@PathVariable int limit) throws SQLException {
         return diseaseCatalog.getDiseases(limit);
     }
 
-    @RequestMapping(value = "/get_by_name_fragment/{fragment}", method=RequestMethod.GET, produces = {MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @RequestMapping(value="/get_by_name_fragment/{fragment}", method=RequestMethod.GET, produces= {"application/json", "application/xml"})
     public List<Disease> getDiseasesByNameFragment(@PathVariable String fragment) throws SQLException {
        return diseaseCatalog.getFragmentDiseases(fragment);
     }
 
-
-    @RequestMapping(value = "/get/{id}", method=RequestMethod.GET, produces = {MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public FullDisease getFullDisease(@PathVariable int diseaseId, @PathVariable int start, @PathVariable int limit) throws SQLException {
-        return buildFullDisease(diseaseId, start, limit);
+    @RequestMapping(value="/get/{id}", method=RequestMethod.GET, produces= {"application/json", "application/xml"})
+    public FullDisease getFullDisease(@PathVariable int id) throws SQLException {
+        return buildFullDisease(id);
     }
 
-    private FullDisease buildFullDisease(int diseaseId, int start, int limit) throws SQLException {
+
+    private FullDisease buildFullDisease(int diseaseId) throws SQLException {
         Disease disease = diseaseCatalog.getDisease(String.valueOf(diseaseId));
         List<Pair<Integer, IndexRank>> rankedPubMeds = index.getArticlesFor(diseaseId);
         List<FullPubMed> pubmeds = getFullPubmeds(rankedPubMeds, diseaseId);
@@ -84,8 +88,8 @@ public class DiseaseService {
         return new FullDisease(disease.getId(), disease.getName(), disease.getDescription(), disease.getDerivedFrom(),
                 disease.getField(), disease.getDead(), pubmeds, images, tweets);
     }
-    
-    @RequestMapping(value="/get_top_articles", method=RequestMethod.GET, produces="application/json")
+
+    @RequestMapping(value="/get_top_articles", method=RequestMethod.GET, produces= {"application/json", "application/xml"})
     public List<FullPubMed> getTopNFullPubmeds(@RequestParam int lim, @RequestParam int diseaseId) throws SQLException{
     	List<FullPubMed> pubmeds = getFullPubmeds(index.getArticlesFor(diseaseId).subList(0, lim), diseaseId);   	
     	return pubmeds;
