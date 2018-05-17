@@ -4,22 +4,13 @@ import com.mysql.cj.jdbc.MysqlDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.*;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Feedback;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Image;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.PubMed;
-import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Tweet;
+import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.*;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Connection;
+import java.sql.*;
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.sql.Statement;
 import java.util.*;
 
 public class DiseaseCatalog {
@@ -180,6 +171,22 @@ public class DiseaseCatalog {
 		return results;
 	}
 
+	/*
+	public List<Pair<Integer, IndexRank>> getRankedPubMeds(int diseaseId) throws SQLException {
+        CompoundRanker ranker = new CompoundRanker(ImmutableMap.of(
+                RankType.TF_IDF_RANK, 0.3,
+                RankType.DATE_RANK, 0.1,
+                RankType.EXPLICIT_FEEDBACK_RANK, 0.4,
+                RankType.IMPLICIT_FEEDBACK_RANK, 0.2
+        ));
+
+        Index index = new Index(ranker, this);
+        index.build();
+
+        return index.getArticlesFor(diseaseId);
+    }
+    */
+
 	public Disease getDisease(String searchTerm) throws SQLException {
 		Disease disease = null;
 
@@ -337,10 +344,10 @@ public class DiseaseCatalog {
 		return pubmeds;
 	}
 
-	public List<FullPubMed> getFullPubmedsByDiseaseId(String diseaseId) throws SQLException {
+	public List<FullPubMed> getFullPubmedsByDiseaseId(int diseaseId, int start, int limit) throws SQLException {
 		ArrayList<FullPubMed> results = new ArrayList<>();
 		PreparedStatement preparedStatement = connection.prepareStatement(SQL_SELECT_PUBMEDS_BY_DISEASE_ID);
-		preparedStatement.setString(1, diseaseId);
+		preparedStatement.setInt(1, diseaseId);
 		try (ResultSet result = preparedStatement.executeQuery()) {
 			while (result.next()) {
 				int id = result.getInt("id");
@@ -620,10 +627,10 @@ public class DiseaseCatalog {
         }
     }
 
-    public List<FullTweet> getFullTweetsByDiseaseId(String diseaseId) throws SQLException {
+    public List<FullTweet> getFullTweetsByDiseaseId(int diseaseId, int start, int limit) throws SQLException {
         ArrayList<FullTweet> results = new ArrayList<>();
         PreparedStatement preparedStatement = connection.prepareStatement(SQL_SELECT_TWEETS_BY_DISEASE_ID);
-        preparedStatement.setString(1, diseaseId);
+        preparedStatement.setInt(1, diseaseId);
         try (ResultSet result = preparedStatement.executeQuery()) {
             while (result.next()) {
                 int id = result.getInt("id");
@@ -667,10 +674,10 @@ public class DiseaseCatalog {
         throw new SQLException("Retrieving generated id failed.");
     }
 
-    public List<FullImage> getFullImagesByDiseaseId(String diseaseId) throws SQLException {
+    public List<FullImage> getFullImagesByDiseaseId(int diseaseId, int start, int limit) throws SQLException {
         ArrayList<FullImage> results = new ArrayList<>();
         PreparedStatement preparedStatement = connection.prepareStatement(SQL_SELECT_IMAGES_BY_DISEASE_ID);
-        preparedStatement.setString(1, diseaseId);
+        preparedStatement.setInt(1, diseaseId);
         try (ResultSet result = preparedStatement.executeQuery()) {
             while (result.next()) {
                 int id = result.getInt("id");

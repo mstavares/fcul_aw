@@ -1,8 +1,14 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.ws;
 
+import com.google.common.collect.ImmutableMap;
 import io.swagger.annotations.Api;
+import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.CompoundRanker;
+import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.Index;
+import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.IndexRank;
+import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.RankType;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.*;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
@@ -57,13 +63,14 @@ public class DiseaseService {
     @GET
     @Path("/get_full_disease/{id}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Object getFullDisease(@PathParam("id") String diseaseId) throws SQLException {
+    public FullDisease getFullDisease(@PathParam("id") int diseaseId) throws SQLException {
         return buildFullDisease(diseaseId);
     }
 
 
-    private FullDisease buildFullDisease(String diseaseId) throws SQLException {
-        Disease disease = diseaseCatalog.getDisease(diseaseId);
+    private FullDisease buildFullDisease(int diseaseId, int start, int limit) throws SQLException {
+        Disease disease = diseaseCatalog.getDisease(String.valueOf(diseaseId));
+        List<Pair<Integer, IndexRank>> rankedPubMeds = getRankedPubMeds(diseaseId);
 
         // get top n PubMeds ranked by the index
         // this.index.getTopPubMeds(n, diseaseId) : List<Integer> pubMedIds // sorted
@@ -71,12 +78,25 @@ public class DiseaseService {
 
         // same for tweets and images
 
-        List<FullPubMed> pubMeds = diseaseCatalog.getFullPubmedsByDiseaseId(diseaseId);
+        List<FullPubMed> pubMeds = diseaseCatalog.getFullPubmedsByDiseaseId(rankedPubMeds, start, limit);
         List<FullTweet> tweets = diseaseCatalog.getFullTweetsByDiseaseId(diseaseId);
         List<FullImage> images = diseaseCatalog.getFullImagesByDiseaseId(diseaseId);
 
         return new FullDisease(disease.getId(), disease.getName(), disease.getDescription(), disease.getDerivedFrom(),
                 pubMeds, images, tweets);
+    }
+
+    public List<Pair<Integer, IndexRank>> getRankedPubMeds(int diseaseId) throws SQLException {
+        CompoundRanker ranker = new CompoundRanker(ImmutableMap.of(
+                RankType.TF_IDF_RANK, 0.3,
+                RankType.DATE_RANK, 0.1,
+                RankType.EXPLICIT_FEEDBACK_RANK, 0.4,
+                RankType.IMPLICIT_FEEDBACK_RANK, 0.2
+        ));
+
+        Index index = new Index(ranker, diseaseCatalog);
+        index.build();
+        return index.getArticlesFor(diseaseId);
     }
 
 }
