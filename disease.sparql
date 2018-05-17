@@ -1,50 +1,73 @@
-1st Part: https://dbpedia.org/sparql?default-graph-uri=http%3A%2F%2Fdbpedia.org&query=PREFIX+dbo%3A+%3Chttp%3A%2F%2Fdbpedia.org%2Fontology%2F%3E%0D%0APREFIX+prov%3A+%3Chttp%3A%2F%2Fwww.w3.org%2Fns%2Fprov%23%3E%0D%0APREFIX+foaf%3A+%3Chttp%3A%2F%2Fxmlns.com%2Ffoaf%2F0.1%2F%3E%0D%0A%0D%0ASELECT+%3Furl+%3Fname+%3Fabstract+%3FwasDerivedFrom+where+%7B%0D%0A+%3Furl+a+dbo%3ADisease%3B%0D%0A+++++++foaf%3Aname+%3Fname%3B%0D%0A+++++++dbo%3Aabstract+%3Fabstract%3B%0D%0A+++++++prov%3AwasDerivedFrom+%3FwasDerivedFrom.%0D%0A+++++++FILTER+%28LANG%28%3Fabstract%29%3D%27en%27%29%0D%0A+++++++FILTER+%28lcase%28str%28%3Fname%29%29+%3D+%22
-2nd Part: %22%29%0D%0A%7D&format=application%2Fsparql-results%2Bjson&CXML_redir_for_subjs=121&CXML_redir_for_hrefs=&timeout=30000&debug=on&run=+Run+Query+
-(disease name goes between 1st and 2nd part)
+GET ALL DISEASES
 
-PREFIX dbo: <http://dbpedia.org/ontology/>
-PREFIX prov: <http://www.w3.org/ns/prov#>
-PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+https://dbpedia.org/sparql?default-graph-uri=http%3A%2F%2Fdbpedia.org&query=SELECT+%3Furl+%3Fname+%3Ffield+%3Fabstract+%3FwasDerivedFrom+where+%7B%0D%0A+%3Furl+a+dbo%3ADisease%3B%0D%0A+++++++foaf%3Aname+%3Fname%3B%0D%0A+++++++dbo%3Aabstract+%3Fabstract%3B%0D%0A+++++++prov%3AwasDerivedFrom+%3FwasDerivedFrom.%0D%0AOPTIONAL%7B%0D%0A+++++++%3Furl+dbp%3Afield+%3FfieldURL.%0D%0A+++++++%3FfieldURL+rdfs%3Alabel+%3Ffield+FILTER+%28LANG%28%3Ffield%29+%3D+%27en%27%29%0D%0A%7D%0D%0A+++++++FILTER+%28LANG%28%3Fabstract%29%3D%27en%27%29%0D%0A+++++++FILTER+%28LANG%28%3Fname%29%3D%27en%27%29%0D%0A%7D&format=application%2Fsparql-results%2Bjson&CXML_redir_for_subjs=121&CXML_redir_for_hrefs=&timeout=30000&debug=on&run=+Run+Query+
 
-SELECT ?url ?name ?abstract ?derivedFrom where {
+SELECT ?url ?name ?field ?abstract ?wasDerivedFrom where {
  ?url a dbo:Disease;
        foaf:name ?name;
        dbo:abstract ?abstract;
-       prov:derivedFrom ?derivedFrom.
+       prov:wasDerivedFrom ?wasDerivedFrom.
+OPTIONAL{
+       ?url dbp:field ?fieldURL.
+       ?fieldURL rdfs:label ?field FILTER (LANG(?field) = 'en')
+}
        FILTER (LANG(?abstract)='en')
-       FILTER (lcase(str(?name)) = "DISEASE_NAME_HERE")
+       FILTER (LANG(?name)='en')
 }
 
-=================================================================
-1st part: https://dbpedia.org/sparql?default-graph-uri=http%3A%2F%2Fdbpedia.org&query=PREFIX+dbo%3A+%3Chttp%3A%2F%2Fdbpedia.org%2Fontology%2F%3E%0D%0APREFIX+prov%3A+%3Chttp%3A%2F%2Fwww.w3.org%2Fns%2Fprov%23%3E%0D%0APREFIX+foaf%3A+%3Chttp%3A%2F%2Fxmlns.com%2Ffoaf%2F0.1%2F%3E%0D%0A%0D%0ASELECT+%3Furl+%3Fname+%3Fabstract+%3FwasDerivedFrom+where+%7B%0D%0A+%3Furl+a+dbo%3ADisease%3B%0D%0A+++++++foaf%3Aname+%3Fname%3B%0D%0A+++++++dbo%3Aabstract+%3Fabstract%3B%0D%0A+++++++prov%3AwasDerivedFrom+%3FwasDerivedFrom.%0D%0A+++++++FILTER+%28LANG%28%3Fabstract%29%3D%27en%27%29%0D%0A+++++++FILTER+%28LANG%28%3Fname%29%3D%27en%27%29%0D%0A%7D+LIMIT+
-2nd part: &format=application%2Fsparql-results%2Bjson&CXML_redir_for_subjs=121&CXML_redir_for_hrefs=&timeout=30000&debug=on&run=+Run+Query+
-(limit goes between 1st and 2nd part)
+===========================================================================================================================================================================================
+GET 10 DISEASES
 
-PREFIX dbo: <http://dbpedia.org/ontology/>
-PREFIX prov: <http://www.w3.org/ns/prov#>
-PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+1st Part: https://dbpedia.org/sparql?default-graph-uri=http%3A%2F%2Fdbpedia.org&query=SELECT+%3Furl+%3Fname+%3Ffield+%3Fabstract+%3FwasDerivedFrom+where+%7B%0D%0A+%3Furl+a+dbo%3ADisease%3B%0D%0A+++++++foaf%3Aname+%3Fname%3B%0D%0A+++++++dbo%3Aabstract+%3Fabstract%3B%0D%0A+++++++prov%3AwasDerivedFrom+%3FwasDerivedFrom.%0D%0AOPTIONAL%7B%0D%0A+++++++%3Furl+dbp%3Afield+%3FfieldURL.%0D%0A+++++++%3FfieldURL+rdfs%3Alabel+%3Ffield+FILTER+%28LANG%28%3Ffield%29+%3D+%27en%27%29%0D%0A%7D%0D%0A+++++++FILTER+%28LANG%28%3Fabstract%29%3D%27en%27%29%0D%0A+++++++FILTER+%28LANG%28%3Fname%29%3D%27en%27%29%0D%0A%7D+LIMIT+
+2nd Part: &format=application%2Fsparql-results%2Bjson&CXML_redir_for_subjs=121&CXML_redir_for_hrefs=&timeout=30000&debug=on&run=+Run+Query+
 
-SELECT ?url ?name ?abstract ?derivedFrom where {
+SELECT ?url ?name ?field ?abstract ?wasDerivedFrom where {
  ?url a dbo:Disease;
        foaf:name ?name;
        dbo:abstract ?abstract;
-       prov:derivedFrom ?derivedFrom.
+       prov:wasDerivedFrom ?wasDerivedFrom.
+OPTIONAL{
+       ?url dbp:field ?fieldURL.
+       ?fieldURL rdfs:label ?field FILTER (LANG(?field) = 'en')
+}
        FILTER (LANG(?abstract)='en')
        FILTER (LANG(?name)='en')
 } LIMIT 10
 
-=================================================================
-https://dbpedia.org/sparql?default-graph-uri=http%3A%2F%2Fdbpedia.org&query=PREFIX+dbo%3A+%3Chttp%3A%2F%2Fdbpedia.org%2Fontology%2F%3E%0D%0APREFIX+prov%3A+%3Chttp%3A%2F%2Fwww.w3.org%2Fns%2Fprov%23%3E%0D%0APREFIX+foaf%3A+%3Chttp%3A%2F%2Fxmlns.com%2Ffoaf%2F0.1%2F%3E%0D%0A%0D%0ASELECT+%3Furl+%3Fname+%3Fabstract+%3FwasDerivedFrom+where+%7B%0D%0A+%3Furl+a+dbo%3ADisease%3B%0D%0A+++++++foaf%3Aname+%3Fname%3B%0D%0A+++++++dbo%3Aabstract+%3Fabstract%3B%0D%0A+++++++prov%3AwasDerivedFrom+%3FwasDerivedFrom.%0D%0A+++++++FILTER+%28LANG%28%3Fabstract%29%3D%27en%27%29%0D%0A+++++++FILTER+%28LANG%28%3Fname%29%3D%27en%27%29%0D%0A%7D&format=application%2Fsparql-results%2Bjson&CXML_redir_for_subjs=121&CXML_redir_for_hrefs=&timeout=30000&debug=on&run=+Run+Query+
+=========================================================================================================================================================================================
+GET A DISEASE BY NAME
 
-PREFIX dbo: <http://dbpedia.org/ontology/>
-PREFIX prov: <http://www.w3.org/ns/prov#>
-PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+1st Part: https://dbpedia.org/sparql?default-graph-uri=http%3A%2F%2Fdbpedia.org&query=SELECT+%3Furl+%3Fname+%3Ffield+%3Fabstract+%3FwasDerivedFrom+where+%7B%0D%0A+%3Furl+a+dbo%3ADisease%3B%0D%0A+++++++foaf%3Aname+%3Fname%3B%0D%0A+++++++dbo%3Aabstract+%3Fabstract%3B%0D%0A+++++++prov%3AwasDerivedFrom+%3FwasDerivedFrom.%0D%0AOPTIONAL+%7B%0D%0A+++++++%3Furl+dbp%3Afield+%3FfieldURL.%0D%0A+++++++%3FfieldURL+rdfs%3Alabel+%3Ffield+FILTER+%28LANG%28%3Ffield%29+%3D+%27en%27%29%0D%0A%7D%0D%0A+++++++FILTER+%28LANG%28%3Fabstract%29%3D%27en%27%29%0D%0A+++++++FILTER+%28LANG%28%3Fname%29%3D%27en%27%29%0D%0A+++++++FILTER+%28lcase%28str%28%3Fname%29%29+%3D+%22
+2nd Part: %22%29%0D%0A%7D+LIMIT+1&format=application%2Fsparql-results%2Bjson&CXML_redir_for_subjs=121&CXML_redir_for_hrefs=&timeout=30000&debug=on&run=+Run+Query+
 
-SELECT ?url ?name ?abstract ?derivedFrom where {
+SELECT ?url ?name ?field ?abstract ?wasDerivedFrom where {
  ?url a dbo:Disease;
        foaf:name ?name;
        dbo:abstract ?abstract;
-       prov:derivedFrom ?derivedFrom.
+       prov:wasDerivedFrom ?wasDerivedFrom.
+OPTIONAL {
+       ?url dbp:field ?fieldURL.
+       ?fieldURL rdfs:label ?field FILTER (LANG(?field) = 'en')
+}
        FILTER (LANG(?abstract)='en')
        FILTER (LANG(?name)='en')
-}
+       FILTER (lcase(str(?name)) = "anthrax")
+} LIMIT 1
+
+==========================================================================================================================================================================================
+GET AT MOST 5 PEOPLE WHO DIED WITH THIS DISEASE
+
+1st Part: https://dbpedia.org/sparql?default-graph-uri=http%3A%2F%2Fdbpedia.org&query=PREFIX+dbo%3A+%3Chttp%3A%2F%2Fdbpedia.org%2Fontology%2F%3E%0D%0A%0D%0ASELECT+%3Fperson+where+%7B%0D%0A+%3Fdisease+a+dbo%3ADisease+.%0D%0A+%3FpersonURL+dbo%3AdeathCause+%3Fdisease+.%0D%0A+%3FpersonURL+foaf%3Aname+%3Fperson+FILTER+%28lang%28%3Fperson%29+%3D+%22en%22%29.%0D%0A+%3Fdisease+foaf%3Aname+%3Fdiseasename+FILTER+%28lang%28%3Fdiseasename%29+%3D+%22en%22%29.%0D%0AFILTER+%28lcase%28str%28%3Fdiseasename%29%29+%3D+%22
+2nd Part: %22%29%0D%0A%7D+LIMIT+5&format=application%2Fsparql-results%2Bjson&CXML_redir_for_subjs=121&CXML_redir_for_hrefs=&timeout=30000&debug=on&run=+Run+Query+
+
+PREFIX dbo: <http://dbpedia.org/ontology/>
+
+SELECT ?person where {
+ ?disease a dbo:Disease .
+ ?personURL dbo:deathCause ?disease .
+ ?personURL foaf:name ?person FILTER (lang(?person) = "en").
+ ?disease foaf:name ?diseasename FILTER (lang(?diseasename) = "en").
+FILTER (lcase(str(?diseasename)) = "pneumonia")
+} LIMIT 5
+
+========================================================================================================================================================================================

@@ -64,7 +64,7 @@ public class PubMedCrawler extends Crawler {
 				String date = getDateAsString(doc);
 				Date dt = getDate(date);
 				
-				if(abstrct != null) {
+				if(abstrct != null && title != null) {
 					diseaseCatalog.addPubMedInfo(disease.getId(), id, title, abstrct, new java.sql.Date(dt.getTime()));
 				}
 					

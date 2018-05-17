@@ -15,14 +15,19 @@ public class Disease {
 
 	private String derivedFrom;
 
-
+	private String field;
+	
+	private String dead;
+	
 	public Disease() {}
 
-	public Disease(int id, String name, String description, String derivedFrom) {
+	public Disease(int id, String name, String description, String derivedFrom, String field, String dead) {
 		this.setId(id);
 		this.setName(name);
 		this.setDescription(description);
 		this.setDerivedFrom(derivedFrom);
+		this.setField(field);
+		this.setDead(dead);
 	}
 
 
@@ -56,5 +61,21 @@ public class Disease {
 
 	public void setDerivedFrom(String derivedFrom) {
 		this.derivedFrom = derivedFrom;
+	}
+	
+	public String getField() {
+		return field;
+	}
+	
+	public void setField(String field) {
+		this.field = field;
+	}
+	
+	public String getDead() {
+		return dead;
+	}
+	
+	public void setDead(String dead) {
+		this.dead = dead;
 	}
 }

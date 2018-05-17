@@ -4,6 +4,8 @@ CREATE TABLE diseases (
 	name VARCHAR(255) UNIQUE NOT NULL, 
 	abstract MEDIUMTEXT, 
 	was_derived_from VARCHAR(255),
+	field VARCHAR(64),
+	death_cause_of VARCHAR(255),
 	idf DOUBLE DEFAULT 0,
 	PRIMARY KEY (id)
 )ENGINE=InnoDB; 
@@ -48,9 +50,8 @@ CREATE TABLE diseases_images (
 CREATE TABLE diseases_tweets (
 	id_diseases INT NOT NULL,
 	id_tweets INT NOT NULL,
-  id_original_disease INT NOT NULL,
-  implicit_feedback INT DEFAULT 0,
-  explicit_feedback INT DEFAULT 0,
+	implicit_feedback INT DEFAULT 0,
+	explicit_feedback INT DEFAULT 0,
 	rank DOUBLE DEFAULT 0,
 	PRIMARY KEY (id_diseases, id_tweets),
 	FOREIGN KEY (id_diseases) REFERENCES diseases(id) ON UPDATE CASCADE ON DELETE CASCADE,
@@ -60,9 +61,8 @@ CREATE TABLE diseases_tweets (
 CREATE TABLE diseases_pubmed (
 	id_diseases INT NOT NULL,
 	id_pubmed INT NOT NULL,
-  id_original_disease INT NOT NULL,
-  implicit_feedback INT DEFAULT 0,
-  explicit_feedback INT DEFAULT 0,
+	implicit_feedback INT DEFAULT 0,
+	explicit_feedback INT DEFAULT 0,
 	rank DOUBLE DEFAULT 0,
 	occurrences INT NOT NULL,
 	tf DOUBLE DEFAULT 0,

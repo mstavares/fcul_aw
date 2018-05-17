@@ -83,7 +83,7 @@ public class DiseaseService {
         List<FullImage> images = diseaseCatalog.getFullImagesByDiseaseId(diseaseId);
 
         return new FullDisease(disease.getId(), disease.getName(), disease.getDescription(), disease.getDerivedFrom(),
-                pubMeds, images, tweets);
+                disease.getField(), disease.getDead(), pubMeds, images, tweets);
     }
 
     public List<Pair<Integer, IndexRank>> getRankedPubMeds(int diseaseId) throws SQLException {

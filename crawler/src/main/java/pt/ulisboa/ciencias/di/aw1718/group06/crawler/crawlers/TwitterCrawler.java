@@ -37,12 +37,12 @@ public class TwitterCrawler extends Crawler {
                 try {
                     this.diseaseCatalog.createTweet(disease, status.getId(), status.getText(), disease.getId(), new java.sql.Date(status.getCreatedAt().getTime()));
                 } catch (SQLException e) {
-                    //logger.error("Error while writing to database: ", e);
+                    logger.error("Error while writing to database: ", e);
                 	return false;
                 }
             }
         } catch (TwitterException e) {
-            //logger.error("Error while looking up results for \"" + disease.getName() + "\"", e);
+            logger.error("Error while looking up results for \"" + disease.getName() + "\"", e);
             return false;
         }
         return true;

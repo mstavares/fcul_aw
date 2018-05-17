@@ -148,6 +148,9 @@ public class Main {
             			.collect(Collectors.toList());
             }
             
+            logger.info("Not adding more diseases!");
+            logger.info("Adding remaining disease-pubmed linkings");
+            
             //link pubmed-mentioned diseases to each pubmed
             for(PubMed p : pubmeds) {
             	Map<String, Integer> annotations = getAnnotations(p.getDescription());
@@ -165,13 +168,14 @@ public class Main {
             	}
             }
             
+            logger.info("adding mentioned diseases - tweets linkings");
+            
             //link twitter mentioned diseases to each tweet
             List<Tweet> tweets = catalog.getAllTweets();
             for(Tweet t : tweets) {
             	Map<String, Integer> annotations = getAnnotations(t.getDescription());
             	if(annotations != null) {
             		for(String diseaseName : annotations.keySet()) {
-            			int occurrences = annotations.get(diseaseName); //TODO?
             			Disease disease = catalog.getDisease(diseaseName);
             			if(disease != null) {
             				catalog.addDiseaseTweetLink(disease.getId(), t.getId());
@@ -180,6 +184,7 @@ public class Main {
             	}
             }
 
+            logger.info("Adding tf and idf to tables");
 
             // Build inverted index.
             CompoundRanker ranker = new CompoundRanker(ImmutableMap.of(
