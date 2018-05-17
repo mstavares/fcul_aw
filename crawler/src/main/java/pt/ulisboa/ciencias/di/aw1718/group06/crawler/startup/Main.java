@@ -37,6 +37,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+import javafx.util.Pair;
+
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     private static final String CONFIG_FILE_NAME = "config.properties";
@@ -114,14 +116,15 @@ public class Main {
             while(numDiseases < MAX_DISEASES && pubmeds.size() > 0) {
             	for(PubMed p : pubmeds) {
             		//<DiseaseName,occurences in abstract>
-                	Map<String, Integer> annotations = getAnnotations(p.getDescription());
+                	Map<String, Pair<Integer, String>> annotations = getAnnotations(p.getDescription());
                 	if(annotations != null) {
                 		for(String diseaseName : annotations.keySet()) {
-                			int occurrences = annotations.get(diseaseName);
+                			int occurrences = annotations.get(diseaseName).getKey();
+                			String places = annotations.get(diseaseName).getValue();
                 			Disease disease = catalog.getDisease(diseaseName);
                 			if(disease != null) {
                 				//disease already in our db
-                				catalog.addPubMedDiseaseLink(disease.getId(), p.getId(), occurrences);
+                				catalog.addPubMedDiseaseLink(disease.getId(), p.getId(), occurrences, places);
                 				logger.info("Added link between " + disease.getId() + " and " + p.getId());
                 			} else {
                 				//disease not in our db
@@ -136,6 +139,7 @@ public class Main {
                 	                	+ (sucP? "pubmed, " : "")
                 	                	+ (sucF? "flickr" : "");
                 	                logger.info("Updated " + s + " info for " + newDisease.getName());
+                	                catalog.addPubMedDiseaseLink(newDisease.getId(), p.getId(), occurrences, places);
                 				}
                 			}
                 		}
@@ -153,15 +157,16 @@ public class Main {
             
             //link pubmed-mentioned diseases to each pubmed
             for(PubMed p : pubmeds) {
-            	Map<String, Integer> annotations = getAnnotations(p.getDescription());
+            	Map<String, Pair<Integer, String>> annotations = getAnnotations(p.getDescription());
             	if(annotations != null) {
             		for(String diseaseName : annotations.keySet()) {
-            			int occurrences = annotations.get(diseaseName);
+            			int occurrences = annotations.get(diseaseName).getKey();
+            			String places = annotations.get(diseaseName).getValue();
             			Disease disease = catalog.getDisease(diseaseName);
             			if(disease != null) {
             				//we dont want to add any more diseases now, but we still have to add the links if 
             				//its a disease we already have
-            				catalog.addPubMedDiseaseLink(disease.getId(), p.getId(), occurrences);
+            				catalog.addPubMedDiseaseLink(disease.getId(), p.getId(), occurrences, places);
             				logger.info("Added link between " + disease.getId() + " and " + p.getId());
             			} 
             		}
@@ -173,7 +178,7 @@ public class Main {
             //link twitter mentioned diseases to each tweet
             List<Tweet> tweets = catalog.getAllTweets();
             for(Tweet t : tweets) {
-            	Map<String, Integer> annotations = getAnnotations(t.getDescription());
+            	Map<String, Pair<Integer, String>> annotations = getAnnotations(t.getDescription());
             	if(annotations != null) {
             		for(String diseaseName : annotations.keySet()) {
             			Disease disease = catalog.getDisease(diseaseName);
@@ -210,8 +215,8 @@ public class Main {
 
     }
     
-    private static Map<String, Integer> getAnnotations(String abstrct) throws MalformedURLException, UnsupportedEncodingException {
-		HashMap<String, Integer> annotations = new HashMap<>();
+    private static Map<String, Pair<Integer, String>> getAnnotations(String abstrct) throws MalformedURLException, UnsupportedEncodingException {
+		HashMap<String, Pair<Integer, String>> annotations = new HashMap<>();
 		URL url = new URL(BASE_URL_MER + URLEncoder.encode(abstrct, "UTF-8"));
 		BufferedReader reader;
 		try{
@@ -222,11 +227,13 @@ public class Main {
 			while((s = reader.readLine()) != null) {
 				String [] split = s.split("\t");
 				String diseaseName = split[split.length-1];
+				String place = split[0];
 				if(annotations.containsKey(diseaseName)) {
-					int occurrences = annotations.get(diseaseName);
-					annotations.replace(diseaseName, occurrences+1);
+					int occurrences = annotations.get(diseaseName).getKey();
+					String places = annotations.get(diseaseName).getValue();
+					annotations.replace(diseaseName, new Pair(occurrences+1, places + ";" + place));
 				} else {
-					annotations.put(diseaseName, 1);
+					annotations.put(diseaseName, new Pair(1, place));
 				}
 			}
 			reader.close();

@@ -46,7 +46,7 @@ public class DiseaseCatalog {
 	private static final String SQL_SELECT_ID_BY_PUBMEDID = "SELECT id FROM pubmed WHERE pubmedID = ?";
     private static final String SQL_SELECT_DATE_BY_PUBMEDID = "SELECT pub_date FROM pubmed WHERE pubmedID = ?";
 	private static final String SQL_INSERT_PUBMED = "INSERT INTO pubmed (pubmedID, title, abstract, pub_date, id_original_disease) VALUES (?, ?, ?, ?, ?)";
-	private static final String SQL_INSERT_PUBMED_DISEASE_LINKING = "INSERT INTO diseases_pubmed (id_diseases, id_pubmed, occurrences) VALUES (?, ?, ?)";
+	private static final String SQL_INSERT_PUBMED_DISEASE_LINKING = "INSERT INTO diseases_pubmed (id_diseases, id_pubmed, occurrences, places) VALUES (?, ?, ?, ?)";
 
 	/*  IMAGES  */
     private static final String SQL_COUNT_IMAGES = "SELECT COUNT(*) FROM images";
@@ -62,10 +62,11 @@ public class DiseaseCatalog {
 	private static final String SQL_SELECT_PUBMED_RELATED_DISEASE_IDS = "SELECT id_diseases FROM diseases_pubmed WHERE id_pubmed = ?";
 	private static final String SQL_SELECT_DISEASE_OCCURRENCES_IN_PUBMED = "SELECT occurrences FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_SELECT_ALL_OCCURRENCES_IN_PUBMED = "SELECT SUM(occurrences) FROM diseases_pubmed WHERE id_pubmed = ?";
-	private static final String SQL_UPDATE_PUBMED_OCCURRENCES = "UPDATE diseases_pubmed SET occurrences = ? WHERE id_diseases = ? AND id_pubmed = ?";
+	private static final String SQL_UPDATE_PUBMED_OCCURRENCES = "UPDATE diseases_pubmed SET occurrences = ?, places = ? WHERE id_diseases = ? AND id_pubmed = ?";
     private static final String SQL_SELECT_DISEASE_PUBMED_TF = "SELECT tf FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
     private static final String SQL_UPDATE_DISEASE_PUBMED_TF = "UPDATE diseases_pubmed SET tf = ? WHERE id_diseases = ? AND id_pubmed = ?";
-
+    private static final String SQL_SELECT_DISEASE_PLACES_ON_PUBMED = "SELECT places FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
+    
     /*  DISEASES_TWEETS*/
     private static final String SQL_SELECT_PAIR_DISEASEID_TWEETID = "SELECT * FROM diseases_tweets WHERE id_diseases = ? AND id_tweets = ?";
     private static final String SQL_SELECT_TWEET_FEEDBACK = "SELECT * FROM diseases_tweets WHERE id_diseases = ? AND tweets.id = ?;";
@@ -80,6 +81,7 @@ public class DiseaseCatalog {
 	private static final String SQL_GET_PUBMED_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_pubmed WHERE id_diseases = ?";
 	private static final String SQL_GET_TWEET_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_tweets WHERE id_diseases = ?";
 	private static final String SQL_GET_IMAGE_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_images WHERE id_diseases = ?";
+	
 
     public DiseaseCatalog(String configFileName) throws SQLException {
         MysqlDataSource dataSource = getDataSourceFromConfig(configFileName);
@@ -263,7 +265,7 @@ public class DiseaseCatalog {
 				//pubmed article already exists in table pubmed
 				//add linking to this disease
 				int id = keys.getInt("id");
-				addPubMedDiseaseLink(diseaseID, id, 1);
+				addPubMedDiseaseLink(diseaseID, id, 1, "");
 				return new PubMed(id, pubmedID, title, abstrct);
 			} else {
 				statement = connection.prepareStatement(SQL_INSERT_PUBMED, Statement.RETURN_GENERATED_KEYS);
@@ -282,7 +284,7 @@ public class DiseaseCatalog {
 					if (kys.next()) {
 						int id = kys.getInt(1);
 						// Add entry in linking table.
-						addPubMedDiseaseLink(diseaseID, id, 1);
+						addPubMedDiseaseLink(diseaseID, id, 1, "");
 						return new PubMed(id, pubmedID, title, abstrct);
 					}
 				}
@@ -291,7 +293,7 @@ public class DiseaseCatalog {
 		}  	
 	} 
 
-	public void addPubMedDiseaseLink(int diseaseID, int id, int occurrences) throws SQLException {
+	public void addPubMedDiseaseLink(int diseaseID, int id, int occurrences, String places) throws SQLException {
 
 		PreparedStatement stmt = connection.prepareStatement(SQL_SELECT_PAIR_DISEASEID_PUBMEDID, Statement.RETURN_GENERATED_KEYS);
 		stmt.setInt(1, diseaseID);
@@ -305,6 +307,7 @@ public class DiseaseCatalog {
 				insertLinking.setInt(1, diseaseID);
 				insertLinking.setInt(2, id);
 				insertLinking.setInt(3, occurrences);
+				insertLinking.setString(4, places);
 				int affected = insertLinking.executeUpdate();
 				if (affected == 0) {
 					throw new SQLException("Creating entry failed, no rows affected.");
@@ -318,8 +321,10 @@ public class DiseaseCatalog {
 					//for 'new' diseases
 					PreparedStatement updateOccurrences = connection.prepareStatement(SQL_UPDATE_PUBMED_OCCURRENCES);
 					updateOccurrences.setInt(1, occurrences);
-					updateOccurrences.setInt(2, id_disease);
-					updateOccurrences.setInt(3, id_pubmed);
+					updateOccurrences.setString(2, places);
+					updateOccurrences.setInt(3, id_disease);
+					updateOccurrences.setInt(4, id_pubmed);
+					
 					int affected = updateOccurrences.executeUpdate();
 					if (affected == 0) {
 						throw new SQLException("Creating entry failed, no rows affected.");
@@ -574,6 +579,19 @@ public class DiseaseCatalog {
         performFeedbackUpdate(feedback, operation);
         return updateFeedback(feedback, SQL_UPDATE_IMAGE_FEEDBACK);
     }
+    
+    public String getDiseaseOccurrencesPlaces(int diseaseId, int idPubmed) throws SQLException{
+  		String places = null;
+  		PreparedStatement stmt = connection.prepareStatement(SQL_SELECT_DISEASE_PLACES_ON_PUBMED);
+  		stmt.setInt(1, diseaseId);
+  		stmt.setInt(2, idPubmed);
+  		try(ResultSet result = stmt.executeQuery()){
+  			while(result.next()) {
+  				places = result.getString("places");
+  			}
+  		}
+  		return places;
+  	}
 
 
     ///////////////////////////////////////  TWEETS //////////////////////////////////////////////////

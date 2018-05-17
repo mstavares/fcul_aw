@@ -65,6 +65,7 @@ CREATE TABLE diseases_pubmed (
 	explicit_feedback INT DEFAULT 0,
 	rank DOUBLE DEFAULT 0,
 	occurrences INT NOT NULL,
+	places VARCHAR(255),
 	tf DOUBLE DEFAULT 0,
 	PRIMARY KEY (id_diseases, id_pubmed),
 	FOREIGN KEY (id_diseases) REFERENCES diseases(id) ON UPDATE CASCADE ON DELETE CASCADE,
