@@ -36,11 +36,13 @@ public class DiseaseCatalog {
     private static final String SQL_INSERT_TWEET = "INSERT INTO tweets (url, text, pub_date, id_original_disease) VALUES (?, ?, ?, ?)";
     private static final String SQL_SELECT_ALL_TWEETS = "SELECT * FROM tweets";
     private static final String SQL_SELECT_TWEETS_BY_DISEASE_ID = "SELECT * FROM tweets, diseases_tweets WHERE diseases_tweets.id_diseases = ? AND tweets.id = diseases_tweets.id_tweets;";
+    private static final String SQL_SELECT_TWEETS_BY_DISEASE_ID_SORTED = "SELECT * FROM tweets, diseases_tweets WHERE diseases_tweets.id_diseases = ? AND tweets.id = diseases_tweets.id_tweets ORDER BY diseases_tweets.explicit_feedback DESC";
     private static final String SQL_INSERT_TWEET_DISEASE_LINKING = "INSERT INTO diseases_tweets (id_diseases, id_tweets) VALUES (?, ?)";
 
 	/*  PUBMED  */
     private static final String SQL_COUNT_PUBMEDS = "SELECT COUNT(*) FROM pubmed";
 	private static final String SQL_SELECT_PUBMEDS_BY_DISEASE_ID = "SELECT * FROM pubmed, diseases_pubmed WHERE diseases_pubmed.id_diseases = ? AND pubmed.id = diseases_pubmed.id_pubmed;";
+	private static final String SQL_GET_FULLPUBMED_BY_ID = "SELECT * FROM pubmed, diseases_pubmed WHERE pubmed.id = ? AND diseases_pubmed.id_diseases = ?";
 	private static final String SQL_SELECT_ALL_PUBMEDS = "SELECT * FROM pubmed";
 	private static final String SQL_SELECT_ALL_PUBMED_IDS = "SELECT id FROM pubmed";
 	private static final String SQL_SELECT_ID_BY_PUBMEDID = "SELECT id FROM pubmed WHERE pubmedID = ?";
@@ -51,6 +53,7 @@ public class DiseaseCatalog {
 	/*  IMAGES  */
     private static final String SQL_COUNT_IMAGES = "SELECT COUNT(*) FROM images";
 	private static final String SQL_SELECT_IMAGES_BY_DISEASE_ID = "SELECT * FROM images, diseases_images WHERE diseases_images.id_diseases = ? AND images.id = diseases_images.id_images;";
+	private static final String SQL_SELECT_IMAGES_BY_DISEASE_ID_SORTED = "SELECT * FROM images, diseases_images WHERE diseases_images.id_diseases = ? AND images.id = diseases_images.id_images ORDER BY diseases_images.explicit_feedback DESC;";
 	private static final String SQL_INSERT_IMAGE = "INSERT INTO images (url) VALUES (?)";
 	private static final String SQL_INSERT_IMAGE_DISEASE_LINKING = "INSERT INTO diseases_images (id_diseases, id_images) VALUES (?, ?)";
 
@@ -773,4 +776,60 @@ public class DiseaseCatalog {
         }
         return new Feedback(implicit, explicit);
     }
+
+	public FullPubMed getFullPubmedByPubID(int id, int id_disease) throws SQLException {
+		FullPubMed pub = null;
+		PreparedStatement preparedStatement = connection.prepareStatement(SQL_GET_FULLPUBMED_BY_ID);
+		preparedStatement.setInt(1, id);
+		preparedStatement.setInt(2, id_disease);
+		try (ResultSet result = preparedStatement.executeQuery()) {
+			while (result.next()) {
+				
+				int pubMedId = result.getInt("pubmedID");
+				String title = result.getString("title");
+				String description = result.getString("abstract");
+				int idOriginalDisease = result.getInt("id_original_disease");
+				int implicitFeedback = result.getInt("implicit_feedback");
+				int explicitFeedback = result.getInt("explicit_feedback");
+				
+				pub = new FullPubMed(id, pubMedId, title, description, idOriginalDisease, implicitFeedback, explicitFeedback, getMentionedDiseases(id));
+			}
+		}
+		return pub;
+	}
+
+	public List<FullTweet> getOrderedTweets(int diseaseId) throws SQLException {
+		ArrayList<FullTweet> results = new ArrayList<>();
+        PreparedStatement preparedStatement = connection.prepareStatement(SQL_SELECT_TWEETS_BY_DISEASE_ID_SORTED);
+        preparedStatement.setInt(1, diseaseId);
+        try (ResultSet result = preparedStatement.executeQuery()) {
+            while (result.next()) {
+                int id = result.getInt("id");
+                String url = result.getString("url");
+                String text = result.getString("text");
+                Date pubDate = result.getDate("pub_date");
+                int idOriginalDisease = result.getInt("id_original_disease");
+                int implicitFeedback = result.getInt("implicit_feedback");
+                int explicitFeedback = result.getInt("explicit_feedback");
+                results.add(new FullTweet(id, url, text, pubDate, idOriginalDisease, implicitFeedback, explicitFeedback));
+            }
+        }
+        return results;
+	}
+
+	public List<FullImage> getOrderedImages(int diseaseId) throws SQLException {
+		ArrayList<FullImage> results = new ArrayList<>();
+        PreparedStatement preparedStatement = connection.prepareStatement(SQL_SELECT_IMAGES_BY_DISEASE_ID_SORTED);
+        preparedStatement.setInt(1, diseaseId);
+        try (ResultSet result = preparedStatement.executeQuery()) {
+            while (result.next()) {
+                int id = result.getInt("id");
+                String url = result.getString("url");
+                int implicitFeedback = result.getInt("implicit_feedback");
+                int explicitFeedback = result.getInt("explicit_feedback");
+                results.add(new FullImage(id, url, implicitFeedback, explicitFeedback));
+            }
+        }
+        return results;
+	}
 }
