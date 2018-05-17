@@ -2,6 +2,9 @@ package pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto;
 
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Image;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
 public class FullImage extends Image {
 
     private int implicitFeedback;

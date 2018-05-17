@@ -2,8 +2,10 @@ package pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto;
 
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Tweet;
 
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
 
+@XmlRootElement
 public class FullTweet extends Tweet {
 
     private Date pubDate;

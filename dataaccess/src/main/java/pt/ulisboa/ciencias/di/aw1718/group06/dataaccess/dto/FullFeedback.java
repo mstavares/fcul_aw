@@ -1,5 +1,8 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
 public class FullFeedback {
 
     public enum Operations { INCREMENT_IMPLICIT, INCREMENT_EXPLICIT, DECREMENT_IMPLICIT, DECREMENT_EXPLICIT }

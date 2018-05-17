@@ -38,6 +38,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-xml</artifactId>
+            <version>2.8.3</version>
+        </dependency>
+        <dependency>
             <groupId>pt.ulisboa.ciencias.di.aw1718.group06</groupId>
             <artifactId>dataaccess</artifactId>
             <version>0.0.1-SNAPSHOT</version>
@@ -46,6 +51,23 @@
             <groupId>pt.ulisboa.ciencias.di.aw1718.group06</groupId>
             <artifactId>crawler</artifactId>
             <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-bundle</artifactId>
+            <version>1.18.3</version>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+            <version>2.8.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>2.8.0</version>
+            <scope>compile</scope>
         </dependency>
 
     </dependencies>
