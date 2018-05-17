@@ -1,23 +1,17 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.ws;
 
-import com.google.common.collect.ImmutableMap;
 import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.CompoundRanker;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.Index;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.IndexRank;
-import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.RankType;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.*;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
 
+import javax.annotation.PostConstruct;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,27 +22,20 @@ import java.util.List;
 public class DiseaseService {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiseaseService.class);
-    private static final String CONFIG_FILE_NAME = "config.properties";
+
     private DiseaseCatalog diseaseCatalog;
+
     private Index index;
 
+    @Autowired
+    public DiseaseService(DiseaseCatalog diseaseCatalog, Index index) {
+        this.diseaseCatalog = diseaseCatalog;
+        this.index = index;
+    }
 
-    public DiseaseService() {
-        try {
-            diseaseCatalog = new DiseaseCatalog(CONFIG_FILE_NAME);
-
-            CompoundRanker ranker = new CompoundRanker(ImmutableMap.of(
-                RankType.TF_IDF_RANK, 0.3,
-                RankType.DATE_RANK, 0.1,
-                RankType.EXPLICIT_FEEDBACK_RANK, 0.4,
-                RankType.IMPLICIT_FEEDBACK_RANK, 0.2
-            ));
-            this.index = new Index(ranker, diseaseCatalog);
-            this.index.build();
-
-        } catch (SQLException e) {
-            LOG.error("Error while connecting to database: " + e.getErrorCode(), e);
-        }
+    @PostConstruct
+    public void init() throws SQLException {
+        this.index.build();
     }
 
     @RequestMapping(value = "/get_statistics", method = RequestMethod.GET, produces = "application/json")

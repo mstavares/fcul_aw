@@ -68,7 +68,7 @@ public class Main {
         Twitter twitter = TwitterFactory.getSingleton();
 
         try {
-			DiseaseCatalog catalog = new DiseaseCatalog(CONFIG_FILE_NAME);
+			DiseaseCatalog catalog = new DiseaseCatalog(dataSource.getConnection());
             
             List<Disease> diseases = catalog.getDiseases(limit);
             
