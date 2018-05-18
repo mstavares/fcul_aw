@@ -47,7 +47,7 @@ public class DiseaseCatalog {
 	private static final String SQL_SELECT_ALL_PUBMEDS = "SELECT * FROM pubmed";
 	private static final String SQL_SELECT_ALL_PUBMED_IDS = "SELECT id FROM pubmed";
 	private static final String SQL_SELECT_ID_BY_PUBMEDID = "SELECT id FROM pubmed WHERE pubmedID = ?";
-    private static final String SQL_SELECT_DATE_BY_PUBMEDID = "SELECT pub_date FROM pubmed WHERE pubmedID = ?";
+    private static final String SQL_SELECT_DATE_BY_PUBMEDID = "SELECT pub_date FROM pubmed WHERE id = ?";
 	private static final String SQL_INSERT_PUBMED = "INSERT INTO pubmed (pubmedID, title, abstract, pub_date, id_original_disease) VALUES (?, ?, ?, ?, ?)";
 	private static final String SQL_INSERT_PUBMED_DISEASE_LINKING = "INSERT INTO diseases_pubmed (id_diseases, id_pubmed, occurrences, places) VALUES (?, ?, ?, ?)";
 
