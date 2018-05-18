@@ -1,4 +1,60 @@
 <div class="content-box">
 	<div class="box-title">Api</div>
-	<div class="box-content" id="api"></div>
+	<div class="box-content" id="api">
+		<h1>Disease Service</h1>
+		<ul>
+			<li>
+				<h3>GET top N related articles to a disease</h3>
+				<p>Usage: disease/get_top_articles?lim={lim}&diseaseId={diseaseId}</p>
+			</li>
+			<li>
+				<h3>GET first N diseases</h3>
+				<p>Usage: disease/get_all/{limit}</p>
+			</li>
+			<li>
+				<h3>GET diseases given a fragment of the name</h3>
+				<p>Usage: disease/get_fragment/{fragment}</p>
+			</li>
+			<li>
+				<h3>GET full disease</h3>
+				<p>Usage: disease/get/{id}</p>
+			</li>
+			<li>
+				<h3>GET Top N related diseases</h3>
+				<p>Usage: disease/get_top_related_diseases?lim={lim}&diseaseId={diseaseId}</p>
+			</li>
+			<li>
+				<h3>GET statistics</h3>
+				<p>Usage: disease/get_statistics</p>
+			</li>
+		</ul>
+		
+		<h1>Pubmed Service</h1>
+		<ul>
+			<li>
+				<h3>GET diseases mentioned in an article and where they appear in text</h3>
+				<p>Usage: pubmed/get_mentioned_diseases/{pubmedId}</p>
+			</li>
+		</ul>
+		
+		<h1>Feedback Service</h1>
+		<ul>
+			<li>
+				<h3>Change feedback on pubmed</h3>
+				<p>Usage: feedback/pubmed?diseaseId={id}&pubmedId={pId}&operation={op}</p>
+			</li>
+			<li>
+				<h3>Change feedback on tweets</h3>
+				<p>Usage: feedback/tweet?diseaseId={id}&tweetId={tId}&operation={op}</p>
+			</li>
+			<li>
+				<h3>Change feedback on images</h3>
+				<p>Usage: feedback/image?diseaseId={id}&imageId={iId}&operation={op}</p>
+			</li>
+		</ul>
+		<p> op = 0 => increment implicit feedback</p>
+		<p> op = 1 => increment explicit feedback</p>
+		<p> op = 2 => decrement implicit feedback</p>
+		<p> op = 3 => decremente explicit feedback</p>
+	</div>
 </div>

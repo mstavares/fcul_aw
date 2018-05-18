@@ -39,8 +39,10 @@ if (diseaseId != undefined){
 			info += "<b>Database id:</b> " + content.id + "<br />";
 			info += "<b>Disease description:</b> " + content.description + "<br />";
 			info += "<b>Wikipedia link:</b> " + content.derivedFrom + "<br />";
-			info += "<b>Field:</b> " + content.field + "<br />";
-			info += "<b>People killed by this disease:</b> " + content.dead + "<br />";
+			if(content.field !== null)
+				info += "<b>Field:</b> " + content.field + "<br />";
+			if(content.dead !== null)
+				info += "<b>People killed by this disease:</b> " + content.dead + "<br />";
 
 			for (var i = 0; i < content.articles.length; i++){
 				articles += "<p><b>" + content.articles[i].title + "</b><br />";
