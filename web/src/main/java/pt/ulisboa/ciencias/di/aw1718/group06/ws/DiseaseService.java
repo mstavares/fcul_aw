@@ -12,11 +12,14 @@ import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.*;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
 
 import javax.annotation.PostConstruct;
+
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 
+@CrossOrigin
 @RestController
 @RequestMapping("/disease")
 public class DiseaseService {
@@ -54,26 +57,21 @@ public class DiseaseService {
     }
 
     @RequestMapping(value="/get/{id}", method=RequestMethod.GET, produces="application/json")
-    public FullDisease getFullDisease(@PathVariable int id) throws SQLException {
+    public FullDisease getFullDisease(@PathVariable int id) throws SQLException, IOException {
         return buildFullDisease(id);
     }
 
 
-    private FullDisease buildFullDisease(int diseaseId) throws SQLException {
+    private FullDisease buildFullDisease(int diseaseId) throws SQLException, IOException {
         Disease disease = diseaseCatalog.getDisease(String.valueOf(diseaseId));
         List<Pair<Integer, IndexRank>> rankedPubMeds = index.getArticlesFor(diseaseId);
         List<FullPubMed> pubmeds = getFullPubmeds(rankedPubMeds, diseaseId);
         List<FullTweet> tweets = diseaseCatalog.getOrderedTweets(diseaseId);
         List<FullImage> images = diseaseCatalog.getOrderedImages(diseaseId);
-
-        // get top n PubMeds ranked by the index
-        // this.index.getTopPubMeds(n, diseaseId) : List<Integer> pubMedIds // sorted
-        // select * from pubmeds where pubmedid in [pubMedIds]  // check if returns in the requested order
-
-        // same for tweets and images
-
-        return new FullDisease(disease.getId(), disease.getName(), disease.getDescription(), disease.getDerivedFrom(),
-                disease.getField(), disease.getDead(), pubmeds, images, tweets);
+        List<Disease> diseases = diseaseCatalog.getTopRelatedDiseases(5, diseaseId);
+        
+        return new FullDisease(disease.getId(), disease.getDoid(), disease.getName(), disease.getDescription(), disease.getDerivedFrom(),
+                disease.getField(), disease.getDead(), pubmeds, images, tweets, diseases);
     }
     
     @RequestMapping(value="/get_top_articles", method=RequestMethod.GET, produces="application/json")
@@ -91,6 +89,11 @@ public class DiseaseService {
 				pubmeds.add(pub);
 		}	
 		return pubmeds;
+	}
+	
+	@RequestMapping(value="/get_top_related_diseases", method=RequestMethod.GET, produces="application/json")
+	public List<Disease> getTopRelatedDiseases(@RequestParam int lim, @RequestParam int diseaseId) throws SQLException, IOException{
+		return diseaseCatalog.getTopRelatedDiseases(lim, diseaseId);
 	}
 
 }

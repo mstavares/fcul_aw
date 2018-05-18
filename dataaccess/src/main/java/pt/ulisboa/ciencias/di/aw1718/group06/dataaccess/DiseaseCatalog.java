@@ -1,11 +1,18 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.dataaccess;
 
-import javafx.util.Pair;
+import com.mysql.cj.jdbc.MysqlDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.*;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.*;
+import javafx.util.Pair;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,7 +29,7 @@ public class DiseaseCatalog {
 	private static final String SQL_SELECT_SINGLE_DISEASE_BY_NAME = "SELECT * FROM diseases WHERE id = ? OR name = ?";
 	private static final String SQL_SELECT_FRAGMENT_DISEASES = "SELECT * FROM diseases WHERE name LIKE ?";
 	private static final String SQL_SELECT_ID_BY_NAME = "SELECT id FROM diseases WHERE name=?";
-	private static final String SQL_INSERT_DISEASE = "INSERT INTO diseases (doid, name, abstract, was_derived_from, field, death_cause_of) VALUES (?, ?, ?, ?, ?)";
+	private static final String SQL_INSERT_DISEASE = "INSERT INTO diseases (doid, name, abstract, was_derived_from, field, death_cause_of) VALUES (?, ?, ?, ?, ?, ?)";
 	private static final String SQL_COUNT_DISEASES = "SELECT COUNT(*) FROM diseases";
 	private static final String SQL_SELECT_DISEASE_IDF = "SELECT idf FROM diseases WHERE id = ?";
 	private static final String SQL_SELECT_ALL_IDFS = "SELECT id, idf FROM diseases";
@@ -85,6 +92,11 @@ public class DiseaseCatalog {
 	private static final String SQL_GET_TWEET_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_tweets WHERE id_diseases = ?";
 	private static final String SQL_GET_IMAGE_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_images WHERE id_diseases = ?";
 	
+	private static final String SQL_GET_DOID_BY_ID = "SELECT doid FROM diseases WHERE diseases.id = ?";
+
+	private static final String SQL_GET_AVG_PUBMEDS_BY_DISEASE = "SELECT avg(a.num) as average FROM (SELECT diseases.id, COUNT(diseases_pubmed.id_pubmed) as num FROM diseases_pubmed, diseases WHERE diseases_pubmed.id_diseases = diseases.id GROUP BY diseases.id) as a";
+	private static final String SQL_GET_AVG_IMAGES_BY_DISEASE = "SELECT avg(a.num) as average FROM (SELECT diseases.id, COUNT(diseases_tweets.id_tweets) as num FROM diseases_tweets, diseases WHERE diseases_tweets.id_diseases = diseases.id GROUP BY diseases.id) as a";
+	private static final String SQL_GET_AVG_TWEETS_BY_DISEASE = "SELECT avg(a.num) as average FROM (SELECT diseases.id, COUNT(diseases_images.id_images) as num FROM diseases_images, diseases WHERE diseases_images.id_diseases = diseases.id GROUP BY diseases.id) as a";
 
     public DiseaseCatalog(Connection connection) {
         this.connection = connection;
@@ -112,7 +124,7 @@ public class DiseaseCatalog {
 		try (ResultSet keys = statement.getGeneratedKeys()) {
 			if (keys.next()) {
 				int id = keys.getInt(1);
-				return new Disease(id, name, description, derivedFrom, field, dead);
+				return new Disease(id, doid, name, description, derivedFrom, field, dead);
 			}
 		}
 		throw new SQLException("Retrieving generated id failed.");
@@ -131,12 +143,13 @@ public class DiseaseCatalog {
 		try (ResultSet result = stmt.executeQuery(query)) {
 			while (result.next()) {
 				int id = result.getInt("id");
+				String doid = result.getString("doid");
 				String name = result.getString("name");
 				String description = result.getString("abstract");
 				String derived = result.getString("was_derived_from");
 				String field = result.getString("field");
 				String dead = result.getString("death_cause_of");
-				results.add(new Disease(id, name, description, derived, field, dead));
+				results.add(new Disease(id, doid, name, description, derived, field, dead));
 			}
 		}
 		return results;
@@ -150,12 +163,13 @@ public class DiseaseCatalog {
 		try (ResultSet result = preparedStatement.executeQuery()) {
 			while (result.next()) {
 				int id = result.getInt("id");
+				String doid = result.getString("doid");
 				String name = result.getString("name");
 				String description = result.getString("abstract");
 				String derived = result.getString("was_derived_from");
 				String field = result.getString("field");
 				String dead = result.getString("death_cause_of");
-				results.add(new Disease(id, name, description, derived, field, dead));
+				results.add(new Disease(id, doid, name, description, derived, field, dead));
 			}
 		}
 		return results;
@@ -171,12 +185,13 @@ public class DiseaseCatalog {
 		try (ResultSet result = statement.executeQuery()) {
 			while (result.next()) {
 				int id = result.getInt("id");
+				String doid = result.getString("doid");
 				String name = result.getString("name");
 				String description = result.getString("abstract");
 				String derived = result.getString("was_derived_from");
 				String field = result.getString("field");
 				String dead = result.getString("death_cause_of");
-				disease = new Disease(id, name, description, derived, field, dead);
+				disease = new Disease(id, doid, name, description, derived, field, dead);
 			}
 		}
 		return disease;
@@ -514,10 +529,44 @@ public class DiseaseCatalog {
         int numberOfPubMeds = getNumberOf(SQL_COUNT_PUBMEDS);
         int numberOfTweets = getNumberOf(SQL_COUNT_TWEETS);
         int numberOfImages = getNumberOf(SQL_COUNT_IMAGES);
-        return new Statistic(numberOfDiseases, numberOfPubMeds, numberOfTweets, numberOfImages);
+        double avgPubmeds = getAvgPubmedsByDisease();
+        double avgTweets = getAvgTweetsByDisease();
+        double avgImages = getAvgImagesByDisease();
+        System.out.println("avgPubmeds= " + avgPubmeds + "===========================================================================");
+        return new Statistic(numberOfDiseases, numberOfPubMeds, numberOfTweets, numberOfImages, avgPubmeds, avgTweets, avgImages);
     }
 
-    public int getNumberOf(String countQuery) throws SQLException {
+    private double getAvgImagesByDisease() throws SQLException {
+    	double avg = -1;
+        Statement statement = connection.createStatement();
+        try(ResultSet result = statement.executeQuery(SQL_GET_AVG_IMAGES_BY_DISEASE)){
+            if(result.next())
+                avg = result.getDouble(1);
+        }
+        return avg;
+	}
+
+	private double getAvgTweetsByDisease() throws SQLException {
+		double avg = -1;
+        Statement statement = connection.createStatement();
+        try(ResultSet result = statement.executeQuery(SQL_GET_AVG_TWEETS_BY_DISEASE)){
+            if(result.next())
+                avg = result.getDouble(1);
+        }
+        return avg;
+	}
+
+	private double getAvgPubmedsByDisease() throws SQLException {
+		double avg = -1;
+        Statement statement = connection.createStatement();
+        try(ResultSet result = statement.executeQuery(SQL_GET_AVG_PUBMEDS_BY_DISEASE)){
+            if(result.next())
+                avg = result.getDouble(1);
+        }
+        return avg;
+	}
+
+	public int getNumberOf(String countQuery) throws SQLException {
         int count = 0;
         Statement statement = connection.createStatement();
         try(ResultSet result = statement.executeQuery(countQuery)){
@@ -814,5 +863,62 @@ public class DiseaseCatalog {
             }
         }
         return results;
+	}
+
+	public List<Disease> getTopRelatedDiseases(int lim, int diseaseId) throws SQLException, IOException{
+		ArrayList<Disease> relatedDiseases = new ArrayList<Disease>();
+		List<Disease> diseases = getDiseases(0);
+		String doid = getDoid(diseaseId);
+		List<Pair<String, Double>> similarities = getSimilarities(doid, diseases);
+		similarities.sort(new Comparator<Pair<String,Double>>(){
+
+			@Override
+			public int compare(Pair<String, Double> o1, Pair<String, Double> o2) {
+				int fst = (int)(o1.getValue()*1000000);
+				int snd = (int)(o2.getValue()*1000000);
+				return snd - fst;
+			}
+
+		});
+
+		for(Pair<String,Double> p : similarities.subList(1, lim+1)) {
+			relatedDiseases.add(getDisease(p.getKey()));
+		}
+
+		return relatedDiseases;
+	}
+
+	private List<Pair<String, Double>> getSimilarities(String doid, List<Disease> diseases) throws IOException {
+		List<Pair<String, Double>> list = new ArrayList<>();
+		for(Disease d : diseases) {
+			String otherDoid = d.getDoid();
+			double dishin = getDishin(doid, otherDoid);
+			list.add(new Pair(d.getName(), dishin));
+		}
+		return list;
+	}
+
+	public double getDishin(String doid1, String doid2) throws IOException {
+
+		String url_get = "http://appserver.alunos.di.fc.ul.pt/~aw006/project/dishin/dishin.php?disOne=" + doid1 + "&disTwo=" + doid2;
+
+		URL url = new URL(url_get);
+	    InputStream is = url.openConnection().getInputStream();
+	    BufferedReader reader = new BufferedReader( new InputStreamReader( is )  );
+
+	    String s = reader.readLine();
+	    return Double.parseDouble(s);
+	}
+
+	private String getDoid(int diseaseId) throws SQLException {
+		PreparedStatement statement = connection.prepareStatement(SQL_GET_DOID_BY_ID, Statement.RETURN_GENERATED_KEYS);
+        statement.setInt(1, diseaseId);
+        String doid = null;
+        try (ResultSet keys = statement.executeQuery()) {
+            if (keys.next()) {
+                doid = keys.getString(1);
+            }
+        }
+        return doid;
 	}
 }

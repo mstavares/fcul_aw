@@ -41,8 +41,9 @@ public class DbPediaCrawler extends Crawler {
 					limit + "&format=application%2Fsparql-results%2Bjson&CXML_redir_for_subjs=121&CXML_redir_for_hrefs=&timeout=30000&debug=on&run=+Run+Query+";
 	}
 	
-	public DbPediaCrawler(DiseaseCatalog diseaseCatalog) {
+	public DbPediaCrawler(DiseaseCatalog diseaseCatalog, Map<String, String> doids) {
 		super(diseaseCatalog);
+		this.doids = doids;
 	}
 	
 	
@@ -72,8 +73,8 @@ public class DbPediaCrawler extends Crawler {
 		    	String field = elemObj.has("field") ? elemObj.get("field").getAsJsonObject().get("value").getAsString() : null;;
 		    	String dead = getDeadFromDisease(name);
 		    	try {
-		    		if(doids.containsKey(dead)) {
-		    			Disease d = diseaseCatalog.addDisease(doids.get(name),name, desc, derivedFrom, field, dead);
+		    		if(doids.containsKey(name.toLowerCase())) {
+		    			Disease d = diseaseCatalog.addDisease(doids.get(name.toLowerCase()),name, desc, derivedFrom, field, dead);
 				    	diseases.add(d);
 		    		}    	
 		    	}catch(SQLException e) {}
@@ -158,8 +159,8 @@ public class DbPediaCrawler extends Crawler {
 		    	String derivedFrom = elemObj.get("wasDerivedFrom").getAsJsonObject().get("value").getAsString();;
 		    	String field = elemObj.has("field") ? elemObj.get("field").getAsJsonObject().get("value").getAsString() : null;;
 		    	String dead = getDeadFromDisease(name);
-		    	if(doids.containsKey(name)) {
-		    		disease = diseaseCatalog.addDisease(doids.get(name), name, desc, derivedFrom, field, dead);
+		    	if(doids.containsKey(name.toLowerCase())) {
+		    		disease = diseaseCatalog.addDisease(doids.get(name.toLowerCase()), name, desc, derivedFrom, field, dead);
 		    	}    
 		    }
 		    

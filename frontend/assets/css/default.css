@@ -1,0 +1,126 @@
+*{
+	margin:0;
+	padding:0;
+}
+
+body{
+	background-image:url(/assets/img/bckg.png)/*, linear-gradient(to right, #00000, #0054a6)*/; /*change gradient to almost white?*/
+	height:100vh;
+	background-size:cover;
+	background-position:top;
+	transition: background-image 2s ease-out;
+	font-family: "Tahoma";
+}
+
+.app-container{
+	position: absolute;
+	float:left;
+	margin-top: 100px;
+	margin-left: 20px;
+}
+
+.main-nav{
+	float:left;
+	list-style: none;
+	margin-top:30px;
+	margin-left: 30px;
+
+}
+
+.main-nav li{
+	display: inline-block;
+}
+
+.main-nav li a{
+	color: white;
+	text-decoration:none;
+	padding:10px 20px;
+	font-family: "Roboto", sans-serif;
+	font-size: 20px;
+	font-size-adjust: auto;
+}
+
+.main-nav li.active a{
+	border: 1px solid white;
+}
+
+.main-nav li a:hover{ 
+   border: 1px solid white; 
+}
+
+.search-box{
+	position: absolute;
+	top: 50px;
+	left:70%;
+	transform: translate(-50%,-50%);
+	height: 40px;
+	border-radius: 40px;
+	padding: 10px;
+	background:white;
+	transition: all 1s ease-out;
+	z-index: 9999;
+}
+
+.search-box:hover > .search-text{
+	width:240px;
+	padding:0 6px;
+}
+
+.search-btn{
+	color: white;
+	text-decoration: none;
+	float: right;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background: #0054a6;
+	display: flex;
+	justify-content: center;
+	align-items: center; 
+}
+
+.search-text{
+	border: none;
+	background: none;
+	outline: none;
+	float: left;
+	padding: 0;
+	color: #0054a6;
+	font-size: 16px;
+	transition: 0.4s;
+	line-height: 40px;
+	width: 240px;
+}
+
+.home-search{
+    top: 20%;
+    left:50%;
+}
+
+.content-box{
+	width: 100%;
+	border: 5px solid #00a2ff;
+	background-color:rgba(255, 255, 255, 0.5);
+}
+
+.box-title{
+	width: 100%;
+	background-color: #00a2ff;
+	color: white;
+	text-align: center;
+	font-weight: bold;
+}
+
+.box-content{
+	margin: 20px;
+}
+
+.livesearch{
+	border: 2px solid black;
+	background-color: white;
+	width: 100%;
+	padding: 2px;
+	position: absolute;
+	visibility: hidden;
+	top:60px;
+}
