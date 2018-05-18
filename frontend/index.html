@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+	<head lang="en">
+		<meta charset="UTF-8">
+		<title>Dieases</title>
+		<link href="/assets/css/default.css" rel="stylesheet" type="text/css">
+		<!--<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.10/css/all.css" integrity="sha384-+d0P83n9kaQMCwj8F4RJB66tzIwOKmrdb46+porD/OvrJ+37WqIM7UoBtwHO6Nlg" crossorigin="anonymous">
+		-->
+	
+</head>
+	<body>
+		<header>			
+			<ul class="main-nav">
+				<li class="active"><a href="#home" onclick="setPage(this)"> HOME </a></li>
+				<li><a href="#diseases" onclick="setPage(this)"> DISEASES </a></li>
+				<li><a href="#statistics" onclick="setPage(this)"> STATISTICS </a></li>
+				<li><a href="#api" onclick="setPage(this)"> API </a></li>
+			</ul>
+
+			<div id="search" class="search-box">
+				<input id="search-input" class="search-text" name ="" placeholder="Search for the disease" onkeyup="search(event)">
+				<a class="search-btn">
+					<i class="fas fa-search" onclick="search(0)"></i>
+				</a>
+			</div>
+			<div id="livesearch"></div>
+		</header>
+
+		<div id="app" class="app-container">
+		</div>
+
+		<script src="assets/js/route.js"></script>
+		<script src="assets/js/router.js"></script>
+		<script src="assets/js/app.js"></script>
+		<script src="assets/js/util.js"></script>
+	</body>
+</html>
