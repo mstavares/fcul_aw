@@ -86,33 +86,9 @@ public class DiseaseCatalog {
 	private static final String SQL_GET_IMAGE_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_images WHERE id_diseases = ?";
 	
 
-    public DiseaseCatalog(String configFileName) throws SQLException {
-        MysqlDataSource dataSource = getDataSourceFromConfig(configFileName);
-        connection = dataSource.getConnection();
+    public DiseaseCatalog(Connection connection) {
+        this.connection = connection;
     }
-
-    private MysqlDataSource getDataSourceFromConfig(String configFileName) {
-        MysqlDataSource dataSource;
-        try (InputStream input = this.getClass().getClassLoader().getResourceAsStream(configFileName)) {
-            LOG.info("Reading properties from file: {}.", configFileName);
-            Properties props = new Properties();
-            props.load(input);
-            dataSource = new MysqlDataSource();
-            dataSource.setUser(props.getProperty("db.user"));
-            dataSource.setPassword(props.getProperty("db.password"));
-            dataSource.setServerName(props.getProperty("db.hostname"));
-            dataSource.setDatabaseName(props.getProperty("db.name"));
-            dataSource.setPort(Integer.valueOf(props.getProperty("db.port")));
-        } catch (FileNotFoundException e) {
-            LOG.error("Properties file not found.", e);
-            return null;
-        } catch (IOException e) {
-            LOG.error("Error while reading properties file.", e);
-            return null;
-        }
-        return dataSource;
-    }
-
 
 	///////////////////////////////////////  DISEASES //////////////////////////////////////////////////
 	public Disease addDisease(String name, String description, String derivedFrom, String field, String dead) throws SQLException {

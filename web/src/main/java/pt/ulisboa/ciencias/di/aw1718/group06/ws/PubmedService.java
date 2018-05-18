@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -20,15 +21,12 @@ import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.MentionedDiseasesDAO
 public class PubmedService {
     
 	private static final Logger LOG = LoggerFactory.getLogger(FeedbackService.class);
-	private static final String CONFIG_FILE_NAME = "config.properties";
+
     private DiseaseCatalog diseaseCatalog;
 
-    public PubmedService() {
-        try {
-            diseaseCatalog = new DiseaseCatalog(CONFIG_FILE_NAME);
-        } catch (SQLException e) {
-            LOG.error("Error while connecting to database: " + e.getErrorCode(), e);
-        }
+    @Autowired
+    public PubmedService(DiseaseCatalog diseaseCatalog) {
+        this.diseaseCatalog = diseaseCatalog;
     }
     
     @RequestMapping(value="/get_mentioned_diseases/{pubmedId}", method=RequestMethod.GET, produces="application/json")
