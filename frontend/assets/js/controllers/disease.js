@@ -45,8 +45,12 @@ if (diseaseId != undefined){
 				info += "<b>People killed by this disease:</b> " + content.dead + "<br />";
 
 			for (var i = 0; i < content.articles.length; i++){
-				articles += "<p><b>" + content.articles[i].title + "</b><br />";
-				articles += "<p>" + content.articles[i].description + "</p>";
+				articles += "<div class='pubmed-container'>"
+					articles += "<div class='pubmed-feedback' onclick='updatePubMedFeedback()'></div>"
+					articles += "<div class='pubmed-title'>" + content.articles[i].title + "</div>"
+					articles += "<div class='pubmed-description'>" + content.articles[i].description + "</div>"
+					articles += "<div class='pubmed-related'>" + content.articles[i].mentionedDiseases + "</div>"
+				articles += "</div>";
 			}
 			
 			for (var i = 0; i < content.images.length; i++){
@@ -57,7 +61,10 @@ if (diseaseId != undefined){
 			}
 
 			for (var i = 0; i < content.tweets.length; i++){
-				tweets += " " + content.tweets[i].description + "<br />";
+				tweets += "<div class='tweet-container'>"
+					tweets += "<div class='tweet-description'>" + content.tweets[i].description + "</div>"
+					tweets += "<div class='tweet-date'>" + content.tweets[i].pubDate + "</div>"
+				tweets += "</div>";
 			}
 
 			document.getElementById('disease').innerHTML = info;
