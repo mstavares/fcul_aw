@@ -16,8 +16,8 @@ public class FullDisease extends Disease {
 
     public FullDisease() {}
 
-    public FullDisease(int id, String name, String diseaseAbstract, String derivedFrom, String field, String dead, List<FullPubMed> articles, List<FullImage> images, List<FullTweet> tweets) {
-        super(id, name, diseaseAbstract, derivedFrom, field, dead);
+    public FullDisease(int id, String doid, String name, String diseaseAbstract, String derivedFrom, String field, String dead, List<FullPubMed> articles, List<FullImage> images, List<FullTweet> tweets) {
+        super(id, doid, name, diseaseAbstract, derivedFrom, field, dead);
         this.articles = articles;
         this.images = images;
         this.tweets = tweets;

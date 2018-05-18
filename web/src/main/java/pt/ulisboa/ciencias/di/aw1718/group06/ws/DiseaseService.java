@@ -69,7 +69,7 @@ public class DiseaseService {
         List<FullTweet> tweets = diseaseCatalog.getOrderedTweets(diseaseId);
         List<FullImage> images = diseaseCatalog.getOrderedImages(diseaseId);
         
-        return new FullDisease(disease.getId(), disease.getName(), disease.getDescription(), disease.getDerivedFrom(),
+        return new FullDisease(disease.getId(), disease.getDoid(), disease.getName(), disease.getDescription(), disease.getDerivedFrom(),
                 disease.getField(), disease.getDead(), pubmeds, images, tweets);
     }
     
