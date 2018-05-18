@@ -12,13 +12,13 @@
 		<header>			
 			<ul class="main-nav">
 				<li class="active"><a href="#home" onclick="setPage(this)"> HOME </a></li>
-				<li><a href="#diseases" onclick="setPage(this)"> DISEASES </a></li>
+				<li><a href="#diseases" onclick="setPage(this)" id="diseases-menu"> DISEASES </a></li>
 				<li><a href="#statistics" onclick="setPage(this)"> STATISTICS </a></li>
 				<li><a href="#api" onclick="setPage(this)"> API </a></li>
 			</ul>
 
 			<div id="search" class="search-box">
-				<input id="search-input" class="search-text" name ="" placeholder="Search for the disease" onkeyup="search(event)">
+				<input id="search-input" class="search-text" name ="" placeholder="Search for a disease" onkeyup="search(event)">
 				<a class="search-btn">
 					<i class="fas fa-search" onclick="search(0)"></i>
 				</a>

@@ -14,7 +14,7 @@ ajax.onreadystatechange = function () {
 		stats += "<li>Average Images By Disease: " + content.averageImagesByDisease + "</li>";
 		stats += "</ul>";
 		
-		document.getElementById('app').innerHTML = stats;
+		document.getElementById('statistics').innerHTML = stats;
 	}
 
 

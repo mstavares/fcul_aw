@@ -1,6 +1,8 @@
 var hash = window.location.hash.substr(1);
 var searchTerm = hash.split('=')[1];
 
+setPage(document.getElementById("diseases-menu"));
+
 if (searchTerm != undefined){
 
 	ajax.onreadystatechange = function () {
@@ -16,6 +18,7 @@ if (searchTerm != undefined){
 
 			diseases += "</ul>";
 			
+			document.getElementById('search-title').innerHTML = "Search results: " + searchTerm;
 			document.getElementById('search-results').innerHTML = diseases;
         }
 

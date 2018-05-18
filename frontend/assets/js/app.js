@@ -6,7 +6,7 @@ var apiBaseUrl = "http://localhost:8080/";
     function init() {
         var router = new Router([
             new Route('home', 'home.html', 'home.js', true),
-            new Route('disease', 'disease.html'),
+            new Route('disease', 'disease.html', 'disease.js'),
             new Route('diseases', 'diseases.html', 'diseases.js'),
             new Route('statistics', 'statistics.html', 'statistics.js'),
             new Route('api', 'api.html'),

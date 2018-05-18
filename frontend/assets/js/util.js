@@ -35,8 +35,6 @@ function setPage(obj){
 
 	var current = document.getElementsByClassName("active");
 
-	console.log(current[0]);
-
 	current[0].classList.remove("active");
 	
 	obj.parentElement.classList.add("active");

@@ -11,7 +11,7 @@ ajax.onreadystatechange = function () {
 
 		diseases += "</ul>";
 		
-		document.getElementById('app').innerHTML = diseases;
+		document.getElementById('diseases-box').innerHTML = diseases;
 	}
 
 
