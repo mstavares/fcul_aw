@@ -65,7 +65,7 @@ function search(e){
 			var content = JSON.parse(html);
 			var diseases = "";
 
-			for (var i = 0; i < content.lenght; i++){
+			for (var i = 0; i < content.length; i++){
 				diseases += "<a href='#disease=" + content[i].id + "'>" + content[i].name + "</a><br />";
 			}
 			

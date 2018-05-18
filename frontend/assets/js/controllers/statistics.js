@@ -9,7 +9,9 @@ ajax.onreadystatechange = function () {
 		stats += "<li>Total number of PubMeds: " + content.numberOfPubMeds + "</li>";
 		stats += "<li>Total number of Tweets: " + content.numberOfTweets + "</li>";
 		stats += "<li>Total number of Images: " + content.numberOfImages + "</li>";
-
+		stats += "<li>Average Pubmeds By Disease: " + content.averagePubmedsByDisease + "</li>";
+		stats += "<li>Average Tweets By Disease: " + content.averageTweetsByDisease + "</li>";
+		stats += "<li>Average Images By Disease: " + content.averageImagesByDisease + "</li>";
 		stats += "</ul>";
 		
 		document.getElementById('app').innerHTML = stats;
