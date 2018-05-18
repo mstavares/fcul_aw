@@ -1,23 +1,19 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.dataaccess;
 
-import com.mysql.cj.jdbc.MysqlDataSource;
+import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.*;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.*;
-import javafx.util.Pair;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.Date;
+import java.util.*;
 
 public class DiseaseCatalog {
 
@@ -98,7 +94,10 @@ public class DiseaseCatalog {
 	private static final String SQL_GET_AVG_IMAGES_BY_DISEASE = "SELECT avg(a.num) as average FROM (SELECT diseases.id, COUNT(diseases_tweets.id_tweets) as num FROM diseases_tweets, diseases WHERE diseases_tweets.id_diseases = diseases.id GROUP BY diseases.id) as a";
 	private static final String SQL_GET_AVG_TWEETS_BY_DISEASE = "SELECT avg(a.num) as average FROM (SELECT diseases.id, COUNT(diseases_images.id_images) as num FROM diseases_images, diseases WHERE diseases_images.id_diseases = diseases.id GROUP BY diseases.id) as a";
 
-    public DiseaseCatalog(Connection connection) {
+
+	private static final String DISHIN_URL = "http://appserver.alunos.di.fc.ul.pt/~aw006/project/dishin/dishin.php";
+
+	public DiseaseCatalog(Connection connection) {
         this.connection = connection;
     }
 
@@ -870,15 +869,10 @@ public class DiseaseCatalog {
 		List<Disease> diseases = getDiseases(0);
 		String doid = getDoid(diseaseId);
 		List<Pair<String, Double>> similarities = getSimilarities(doid, diseases);
-		similarities.sort(new Comparator<Pair<String,Double>>(){
-
-			@Override
-			public int compare(Pair<String, Double> o1, Pair<String, Double> o2) {
-				int fst = (int)(o1.getValue()*1000000);
-				int snd = (int)(o2.getValue()*1000000);
-				return snd - fst;
-			}
-
+		similarities.sort((o1, o2) -> {
+			int fst = (int)(o1.getValue()*1000000);
+			int snd = (int)(o2.getValue()*1000000);
+			return snd - fst;
 		});
 
 		for(Pair<String,Double> p : similarities.subList(1, lim+1)) {
@@ -893,18 +887,18 @@ public class DiseaseCatalog {
 		for(Disease d : diseases) {
 			String otherDoid = d.getDoid();
 			double dishin = getDishin(doid, otherDoid);
-			list.add(new Pair(d.getName(), dishin));
+			list.add(new Pair<>(d.getName(), dishin));
 		}
 		return list;
 	}
 
 	public double getDishin(String doid1, String doid2) throws IOException {
 
-		String url_get = "http://appserver.alunos.di.fc.ul.pt/~aw006/project/dishin/dishin.php?disOne=" + doid1 + "&disTwo=" + doid2;
+		String url_get = DISHIN_URL + "?disOne=" + doid1 + "&disTwo=" + doid2;
 
 		URL url = new URL(url_get);
 	    InputStream is = url.openConnection().getInputStream();
-	    BufferedReader reader = new BufferedReader( new InputStreamReader( is )  );
+	    BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
 	    String s = reader.readLine();
 	    return Double.parseDouble(s);
