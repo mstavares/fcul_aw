@@ -1,4 +1,3 @@
-id,disease_name,DOID
 0,narcolepsy,DOID_8986
 1,adult central nervous system embryonal carcinoma,DOID_7233
 2,subungual glomus tumor,DOID_5236

@@ -21,6 +21,7 @@ import twitter4j.TwitterFactory;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -31,6 +32,7 @@ import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,12 +44,13 @@ import javafx.util.Pair;
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     private static final String CONFIG_FILE_NAME = "config.properties";
+    private static final String DOID_FILE_NAME = "DOID_NAME.txt";
     
     private static final int MAX_DISEASES = 50;
     
     private final static String BASE_URL_MER = "http://labs.fc.ul.pt/mer/api.php?lexicon=disease&text=";
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		
 		boolean forceUpdate = forceUpdate(args);
 		String singleDisease = getSingleDisease(args);
@@ -67,6 +70,8 @@ public class Main {
         System.setProperty("twitter4j.loggerFactory", "twitter4j.NullLoggerFactory");
         Twitter twitter = TwitterFactory.getSingleton();
 
+        Map<String, String> doids = getDoids();
+        
         try {
 			DiseaseCatalog catalog = new DiseaseCatalog(dataSource.getConnection());
             
@@ -84,7 +89,7 @@ public class Main {
             }
             
             if (forceUpdate || diseases.size() == 0) {
-                DbPediaCrawler dbpediaCrawler = new DbPediaCrawler(catalog, limit);
+                DbPediaCrawler dbpediaCrawler = new DbPediaCrawler(catalog, limit, doids);
                 List<Disease> temp = dbpediaCrawler.update();
                 logger.info("Added " + temp.size() + " diseases to the database.");
                 
@@ -215,7 +220,21 @@ public class Main {
 
     }
     
-    private static Map<String, Pair<Integer, String>> getAnnotations(String abstrct) throws MalformedURLException, UnsupportedEncodingException {
+    private static Map<String, String> getDoids() throws IOException {
+		BufferedReader in = new BufferedReader(new FileReader(DOID_FILE_NAME));
+		String s;
+		HashMap<String, String> map = new HashMap<>();
+		while((s = in.readLine()) != null) {
+			String[] split = s.split(",");
+			
+			if(split.length > 1) {
+				map.put(split[1], split[2]);
+			}
+		}
+		return map;
+	}
+
+	private static Map<String, Pair<Integer, String>> getAnnotations(String abstrct) throws MalformedURLException, UnsupportedEncodingException {
 		HashMap<String, Pair<Integer, String>> annotations = new HashMap<>();
 		URL url = new URL(BASE_URL_MER + URLEncoder.encode(abstrct, "UTF-8"));
 		BufferedReader reader;

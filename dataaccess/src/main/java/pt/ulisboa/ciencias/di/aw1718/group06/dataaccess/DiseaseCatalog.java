@@ -24,7 +24,7 @@ public class DiseaseCatalog {
 	private static final String SQL_SELECT_SINGLE_DISEASE_BY_NAME = "SELECT * FROM diseases WHERE id = ? OR name = ?";
 	private static final String SQL_SELECT_FRAGMENT_DISEASES = "SELECT * FROM diseases WHERE name LIKE ?";
 	private static final String SQL_SELECT_ID_BY_NAME = "SELECT id FROM diseases WHERE name=?";
-	private static final String SQL_INSERT_DISEASE = "INSERT INTO diseases (name, abstract, was_derived_from, field, death_cause_of) VALUES (?, ?, ?, ?, ?)";
+	private static final String SQL_INSERT_DISEASE = "INSERT INTO diseases (doid, name, abstract, was_derived_from, field, death_cause_of) VALUES (?, ?, ?, ?, ?)";
 	private static final String SQL_COUNT_DISEASES = "SELECT COUNT(*) FROM diseases";
 	private static final String SQL_SELECT_DISEASE_IDF = "SELECT idf FROM diseases WHERE id = ?";
 	private static final String SQL_SELECT_ALL_IDFS = "SELECT id, idf FROM diseases";
@@ -91,13 +91,14 @@ public class DiseaseCatalog {
     }
 
 	///////////////////////////////////////  DISEASES //////////////////////////////////////////////////
-	public Disease addDisease(String name, String description, String derivedFrom, String field, String dead) throws SQLException {
+	public Disease addDisease(String doid, String name, String description, String derivedFrom, String field, String dead) throws SQLException {
 		PreparedStatement statement = connection.prepareStatement(SQL_INSERT_DISEASE, Statement.RETURN_GENERATED_KEYS);
-		statement.setString(1, name);
-		statement.setString(2, description);
-		statement.setString(3, derivedFrom);
-		statement.setString(4, field);
-		statement.setString(5, dead);
+		statement.setString(1, doid);
+		statement.setString(2, name);
+		statement.setString(3, description);
+		statement.setString(4, derivedFrom);
+		statement.setString(5, field);
+		statement.setString(6, dead);
 
 		try {
 			int affected = statement.executeUpdate();

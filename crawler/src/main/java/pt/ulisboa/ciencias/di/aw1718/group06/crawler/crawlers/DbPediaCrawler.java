@@ -11,6 +11,7 @@ import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -30,9 +31,11 @@ public class DbPediaCrawler extends Crawler {
 	private static String GET_DEAD_FST = "https://dbpedia.org/sparql?default-graph-uri=http%3A%2F%2Fdbpedia.org&query=PREFIX+dbo%3A+%3Chttp%3A%2F%2Fdbpedia.org%2Fontology%2F%3E%0D%0A%0D%0ASELECT+%3Fperson+where+%7B%0D%0A+%3Fdisease+a+dbo%3ADisease+.%0D%0A+%3FpersonURL+dbo%3AdeathCause+%3Fdisease+.%0D%0A+%3FpersonURL+foaf%3Aname+%3Fperson+FILTER+%28lang%28%3Fperson%29+%3D+%22en%22%29.%0D%0A+%3Fdisease+foaf%3Aname+%3Fdiseasename+FILTER+%28lang%28%3Fdiseasename%29+%3D+%22en%22%29.%0D%0AFILTER+%28lcase%28str%28%3Fdiseasename%29%29+%3D+%22";
 	private static String GET_DEAD_SND = "%22%29%0D%0A%7D+LIMIT+5&format=application%2Fsparql-results%2Bjson&CXML_redir_for_subjs=121&CXML_redir_for_hrefs=&timeout=30000&debug=on&run=+Run+Query+";
 	
-	public DbPediaCrawler(DiseaseCatalog diseaseCatalog, int limit) {
+	private Map<String, String> doids;
+	
+	public DbPediaCrawler(DiseaseCatalog diseaseCatalog, int limit, Map<String,String> doids) {
 		super(diseaseCatalog);
-		
+		this.doids = doids;
 		if (limit > 0)
 			BASE_URL = "https://dbpedia.org/sparql?default-graph-uri=http%3A%2F%2Fdbpedia.org&query=SELECT+%3Furl+%3Fname+%3Ffield+%3Fabstract+%3FwasDerivedFrom+where+%7B%0D%0A+%3Furl+a+dbo%3ADisease%3B%0D%0A+++++++foaf%3Aname+%3Fname%3B%0D%0A+++++++dbo%3Aabstract+%3Fabstract%3B%0D%0A+++++++prov%3AwasDerivedFrom+%3FwasDerivedFrom.%0D%0AOPTIONAL%7B%0D%0A+++++++%3Furl+dbp%3Afield+%3FfieldURL.%0D%0A+++++++%3FfieldURL+rdfs%3Alabel+%3Ffield+FILTER+%28LANG%28%3Ffield%29+%3D+%27en%27%29%0D%0A%7D%0D%0A+++++++FILTER+%28LANG%28%3Fabstract%29%3D%27en%27%29%0D%0A+++++++FILTER+%28LANG%28%3Fname%29%3D%27en%27%29%0D%0A%7D+LIMIT+"+ 
 					limit + "&format=application%2Fsparql-results%2Bjson&CXML_redir_for_subjs=121&CXML_redir_for_hrefs=&timeout=30000&debug=on&run=+Run+Query+";
@@ -69,8 +72,10 @@ public class DbPediaCrawler extends Crawler {
 		    	String field = elemObj.has("field") ? elemObj.get("field").getAsJsonObject().get("value").getAsString() : null;;
 		    	String dead = getDeadFromDisease(name);
 		    	try {
-			    	Disease d = diseaseCatalog.addDisease(name, desc, derivedFrom, field, dead);
-			    	diseases.add(d);
+		    		if(doids.containsKey(dead)) {
+		    			Disease d = diseaseCatalog.addDisease(doids.get(name),name, desc, derivedFrom, field, dead);
+				    	diseases.add(d);
+		    		}    	
 		    	}catch(SQLException e) {}
 
 		    }
@@ -153,7 +158,9 @@ public class DbPediaCrawler extends Crawler {
 		    	String derivedFrom = elemObj.get("wasDerivedFrom").getAsJsonObject().get("value").getAsString();;
 		    	String field = elemObj.has("field") ? elemObj.get("field").getAsJsonObject().get("value").getAsString() : null;;
 		    	String dead = getDeadFromDisease(name);
-			    disease = diseaseCatalog.addDisease(name, desc, derivedFrom, field, dead);
+		    	if(doids.containsKey(name)) {
+		    		disease = diseaseCatalog.addDisease(doids.get(name), name, desc, derivedFrom, field, dead);
+		    	}    
 		    }
 		    
 		    reader.close();
