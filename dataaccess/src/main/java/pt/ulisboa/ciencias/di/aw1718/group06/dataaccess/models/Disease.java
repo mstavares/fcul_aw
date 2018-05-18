@@ -7,7 +7,7 @@ public class Disease {
 
 	private int id;
 	
-	//private String doid;
+	private String doid;
 	
 	private String name;
 
@@ -21,8 +21,9 @@ public class Disease {
 	
 	public Disease() {}
 
-	public Disease(int id, String name, String description, String derivedFrom, String field, String dead) {
+	public Disease(int id, String doid, String name, String description, String derivedFrom, String field, String dead) {
 		this.setId(id);
+		this.setDoid(doid);
 		this.setName(name);
 		this.setDescription(description);
 		this.setDerivedFrom(derivedFrom);
@@ -77,5 +78,13 @@ public class Disease {
 	
 	public void setDead(String dead) {
 		this.dead = dead;
+	}
+	
+	public String getDoid() {
+		return doid;
+	}
+	
+	public void setDoid(String doid) {
+		this.doid = doid;
 	}
 }

@@ -46,7 +46,7 @@ public class Main {
     private static final String CONFIG_FILE_NAME = "config.properties";
     private static final String DOID_FILE_NAME = "DOID_NAME.txt";
     
-    private static final int MAX_DISEASES = 50;
+    private static final int MAX_DISEASES = 25;
     
     private final static String BASE_URL_MER = "http://labs.fc.ul.pt/mer/api.php?lexicon=disease&text=";
 
@@ -133,7 +133,7 @@ public class Main {
                 				logger.info("Added link between " + disease.getId() + " and " + p.getId());
                 			} else {
                 				//disease not in our db
-                				DbPediaCrawler dbpediaCrawler = new DbPediaCrawler(catalog);
+                				DbPediaCrawler dbpediaCrawler = new DbPediaCrawler(catalog, doids);
                 				Disease newDisease = dbpediaCrawler.getSingleDisease(diseaseName);
                 				if(newDisease != null) {
                 					logger.info("Added "+newDisease.getName()+" to DB");
@@ -228,9 +228,11 @@ public class Main {
 			String[] split = s.split(",");
 			
 			if(split.length > 1) {
-				map.put(split[1], split[2]);
+				map.put(split[1].toLowerCase(), split[2]);
 			}
 		}
+		
+		in.close();
 		return map;
 	}
 
@@ -334,35 +336,4 @@ public class Main {
     	}	
     	return result;
     }
-    
-    public static double createCommand(String entry1, String entry2) {		
-		
-		StringBuilder sb = new StringBuilder();
-		sb.append("python dishin.py doid.db ");
-		sb.append(entry1 + " ");
-		sb.append(entry2);
-		
-		Process process;
-		try {
-			process = Runtime.getRuntime().exec(sb.toString());
-			BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-			BufferedReader error = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-			String ret=null;
-			String val=null;
-			int counter=0;
-			while((ret=in.readLine())!=null){
-				if(counter==2) {
-					val+=ret.toString();
-				}
-				counter+=1;
-			}
-			String [] val2=val.split("	",4);
-			String val3=val2[val2.length-1];
-			return Double.parseDouble(val3);
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return 0;		
-	}
 }

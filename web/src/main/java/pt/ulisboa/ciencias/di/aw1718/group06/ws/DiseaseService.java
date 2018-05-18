@@ -12,6 +12,8 @@ import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.*;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
 
 import javax.annotation.PostConstruct;
+
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,13 +67,7 @@ public class DiseaseService {
         List<FullPubMed> pubmeds = getFullPubmeds(rankedPubMeds, diseaseId);
         List<FullTweet> tweets = diseaseCatalog.getOrderedTweets(diseaseId);
         List<FullImage> images = diseaseCatalog.getOrderedImages(diseaseId);
-
-        // get top n PubMeds ranked by the index
-        // this.index.getTopPubMeds(n, diseaseId) : List<Integer> pubMedIds // sorted
-        // select * from pubmeds where pubmedid in [pubMedIds]  // check if returns in the requested order
-
-        // same for tweets and images
-
+        
         return new FullDisease(disease.getId(), disease.getName(), disease.getDescription(), disease.getDerivedFrom(),
                 disease.getField(), disease.getDead(), pubmeds, images, tweets);
     }
@@ -91,6 +87,11 @@ public class DiseaseService {
 				pubmeds.add(pub);
 		}	
 		return pubmeds;
+	}
+	
+	@RequestMapping(value="/get_top_related_diseases", method=RequestMethod.GET, produces="application/json")
+	public List<Disease> getTopRelatedDiseases(@RequestParam int lim, @RequestParam int diseaseId) throws SQLException, IOException{
+		return diseaseCatalog.getTopRelatedDiseases(lim, diseaseId);
 	}
 
 }
