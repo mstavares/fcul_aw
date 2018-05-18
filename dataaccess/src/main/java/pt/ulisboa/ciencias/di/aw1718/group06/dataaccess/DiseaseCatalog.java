@@ -1,14 +1,12 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.dataaccess;
 
-import com.mysql.cj.jdbc.MysqlDataSource;
+import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.*;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.*;
-import javafx.util.Pair;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -49,7 +47,7 @@ public class DiseaseCatalog {
 	private static final String SQL_SELECT_ALL_PUBMEDS = "SELECT * FROM pubmed";
 	private static final String SQL_SELECT_ALL_PUBMED_IDS = "SELECT id FROM pubmed";
 	private static final String SQL_SELECT_ID_BY_PUBMEDID = "SELECT id FROM pubmed WHERE pubmedID = ?";
-    private static final String SQL_SELECT_DATE_BY_PUBMEDID = "SELECT pub_date FROM pubmed WHERE pubmedID = ?";
+    private static final String SQL_SELECT_DATE_BY_PUBMEDID = "SELECT pub_date FROM pubmed WHERE id = ?";
 	private static final String SQL_INSERT_PUBMED = "INSERT INTO pubmed (pubmedID, title, abstract, pub_date, id_original_disease) VALUES (?, ?, ?, ?, ?)";
 	private static final String SQL_INSERT_PUBMED_DISEASE_LINKING = "INSERT INTO diseases_pubmed (id_diseases, id_pubmed, occurrences, places) VALUES (?, ?, ?, ?)";
 
@@ -72,7 +70,9 @@ public class DiseaseCatalog {
     private static final String SQL_SELECT_DISEASE_PUBMED_TF = "SELECT tf FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
     private static final String SQL_UPDATE_DISEASE_PUBMED_TF = "UPDATE diseases_pubmed SET tf = ? WHERE id_diseases = ? AND id_pubmed = ?";
     private static final String SQL_SELECT_DISEASE_PLACES_ON_PUBMED = "SELECT places FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
-    
+    private static final String SQL_UPDATE_DISEASE_PUBMED_RANK = "UPDATE diseases_pubmed SET rank = ? WHERE id_diseases = ? AND id_pubmed = ?";
+	private static final String SQL_SELECT_DISEASE_PUBMED_RANK = "SELECT rank FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
+
     /*  DISEASES_TWEETS*/
     private static final String SQL_SELECT_PAIR_DISEASEID_TWEETID = "SELECT * FROM diseases_tweets WHERE id_diseases = ? AND id_tweets = ?";
     private static final String SQL_SELECT_TWEET_FEEDBACK = "SELECT * FROM diseases_tweets WHERE id_diseases = ? AND id_tweets = ?;";
@@ -89,12 +89,15 @@ public class DiseaseCatalog {
 	private static final String SQL_GET_IMAGE_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_images WHERE id_diseases = ?";
 	
 	private static final String SQL_GET_DOID_BY_ID = "SELECT doid FROM diseases WHERE diseases.id = ?";
-	
+
 	private static final String SQL_GET_AVG_PUBMEDS_BY_DISEASE = "SELECT avg(a.num) as average FROM (SELECT diseases.id, COUNT(diseases_pubmed.id_pubmed) as num FROM diseases_pubmed, diseases WHERE diseases_pubmed.id_diseases = diseases.id GROUP BY diseases.id) as a";
 	private static final String SQL_GET_AVG_IMAGES_BY_DISEASE = "SELECT avg(a.num) as average FROM (SELECT diseases.id, COUNT(diseases_tweets.id_tweets) as num FROM diseases_tweets, diseases WHERE diseases_tweets.id_diseases = diseases.id GROUP BY diseases.id) as a";
 	private static final String SQL_GET_AVG_TWEETS_BY_DISEASE = "SELECT avg(a.num) as average FROM (SELECT diseases.id, COUNT(diseases_images.id_images) as num FROM diseases_images, diseases WHERE diseases_images.id_diseases = diseases.id GROUP BY diseases.id) as a";
 
-    public DiseaseCatalog(Connection connection) {
+
+	private static final String DISHIN_URL = "http://appserver.alunos.di.fc.ul.pt/~aw006/project/dishin/dishin.php";
+
+	public DiseaseCatalog(Connection connection) {
         this.connection = connection;
     }
 
@@ -170,22 +173,6 @@ public class DiseaseCatalog {
 		}
 		return results;
 	}
-
-	/*
-	public List<Pair<Integer, IndexRank>> getRankedPubMeds(int diseaseId) throws SQLException {
-        CompoundRanker ranker = new CompoundRanker(ImmutableMap.of(
-                RankType.TF_IDF_RANK, 0.3,
-                RankType.DATE_RANK, 0.1,
-                RankType.EXPLICIT_FEEDBACK_RANK, 0.4,
-                RankType.IMPLICIT_FEEDBACK_RANK, 0.2
-        ));
-
-        Index index = new Index(ranker, this);
-        index.build();
-
-        return index.getArticlesFor(diseaseId);
-    }
-    */
 
 	public Disease getDisease(String searchTerm) throws SQLException {
 		Disease disease = null;
@@ -634,6 +621,28 @@ public class DiseaseCatalog {
         return diseases;
     }
 
+	public double getDiseasePubMedRank(int diseaseId, int pubmedId) throws SQLException {
+		PreparedStatement stmt = connection.prepareStatement(SQL_SELECT_DISEASE_PUBMED_RANK);
+		stmt.setInt(1, diseaseId);
+		stmt.setInt(2, pubmedId);
+		try (ResultSet result = stmt.executeQuery()) {
+			if (result.next()) {
+				return result.getDouble("rank");
+			}
+		}
+		throw new SQLException("Getting the rank failed, no results.");
+	}
+
+	public void updateDiseasePubMedRank(int diseaseId, int pubmedId, double rank) throws SQLException {
+		PreparedStatement stmt = connection.prepareStatement(SQL_UPDATE_DISEASE_PUBMED_RANK);
+		stmt.setDouble(1, rank);
+		stmt.setInt(2, diseaseId);
+		stmt.setInt(3, pubmedId);
+		int affected = stmt.executeUpdate();
+		if (affected == 0) {
+			throw new SQLException("Updating rank failed, no rows affected.");
+		}
+	}
 
     ///////////////////////////////////////  TWEETS //////////////////////////////////////////////////
     public List<Tweet> getAllTweets() throws SQLException{
@@ -854,27 +863,22 @@ public class DiseaseCatalog {
         }
         return results;
 	}
-	
+
 	public List<Disease> getTopRelatedDiseases(int lim, int diseaseId) throws SQLException, IOException{
 		ArrayList<Disease> relatedDiseases = new ArrayList<Disease>();
 		List<Disease> diseases = getDiseases(0);
 		String doid = getDoid(diseaseId);
 		List<Pair<String, Double>> similarities = getSimilarities(doid, diseases);
-		similarities.sort(new Comparator<Pair<String,Double>>(){
-
-			@Override
-			public int compare(Pair<String, Double> o1, Pair<String, Double> o2) {
-				int fst = (int)(o1.getValue()*1000000);
-				int snd = (int)(o2.getValue()*1000000);
-				return snd - fst;
-			}
-			
+		similarities.sort((o1, o2) -> {
+			int fst = (int)(o1.getValue()*1000000);
+			int snd = (int)(o2.getValue()*1000000);
+			return snd - fst;
 		});
-		
+
 		for(Pair<String,Double> p : similarities.subList(1, lim+1)) {
 			relatedDiseases.add(getDisease(p.getKey()));
 		}
-		
+
 		return relatedDiseases;
 	}
 
@@ -883,19 +887,19 @@ public class DiseaseCatalog {
 		for(Disease d : diseases) {
 			String otherDoid = d.getDoid();
 			double dishin = getDishin(doid, otherDoid);
-			list.add(new Pair(d.getName(), dishin));
+			list.add(new Pair<>(d.getName(), dishin));
 		}
 		return list;
 	}
 
 	public double getDishin(String doid1, String doid2) throws IOException {
-		
-		String url_get = "http://appserver.alunos.di.fc.ul.pt/~aw006/project/dishin/dishin.php?disOne=" + doid1 + "&disTwo=" + doid2;
-    	
+
+		String url_get = DISHIN_URL + "?disOne=" + doid1 + "&disTwo=" + doid2;
+
 		URL url = new URL(url_get);
 	    InputStream is = url.openConnection().getInputStream();
-	    BufferedReader reader = new BufferedReader( new InputStreamReader( is )  );
-	        
+	    BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+
 	    String s = reader.readLine();
 	    return Double.parseDouble(s);
 	}

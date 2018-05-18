@@ -4,8 +4,10 @@ import com.google.common.collect.ImmutableMap;
 import com.mysql.cj.jdbc.MysqlDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.CompoundRanker;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.Index;
 import pt.ulisboa.ciencias.di.aw1718.group06.crawler.index.RankType;
@@ -25,6 +27,7 @@ public class ServiceConfig {
     private static final String CONFIG_FILE_NAME = "config.properties";
 
     @Bean
+    @Scope(value = ConfigurableBeanFactory.SCOPE_SINGLETON)
     public Index getPubmedIndex() throws SQLException {
         return new Index(getCompoundRanker(), getDiseaseCatalog());
     }
