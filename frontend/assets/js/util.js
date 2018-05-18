@@ -52,7 +52,7 @@ function search(e){
 	
 	if (input.length==0) {
 		document.getElementById("livesearch").innerHTML="";
-		document.getElementById("livesearch").style.border="0px";
+		document.getElementById("livesearch").style.visibility = "hidden"; 
 		return;
 	}
 
@@ -64,11 +64,18 @@ function search(e){
 			var diseases = "";
 
 			for (var i = 0; i < content.length; i++){
-				diseases += "<a href='#disease=" + content[i].id + "'>" + content[i].name + "</a><br />";
+                var pattern = new RegExp(input, 'gi');
+                var name = content[i].name.replace(pattern, '<b>$&</b>');
+				diseases += "<a href='#disease=" + content[i].id + "'>" + name + "</a><br />";
 			}
-			
-			document.getElementById("livesearch").innerHTML = diseases;
-			document.getElementById("livesearch").style.border="1px solid #A5ACB2";
+            
+            if (content.length != 0){
+                document.getElementById("livesearch").innerHTML = diseases;
+                document.getElementById("livesearch").style.visibility = "visible"; 
+            }else{
+                document.getElementById("livesearch").innerHTML = "";
+                document.getElementById("livesearch").style.visibility = "hidden"; 
+            }
         }
 
 

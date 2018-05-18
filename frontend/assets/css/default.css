@@ -50,7 +50,7 @@ body{
 
 .search-box{
 	position: absolute;
-	top: 6%;
+	top: 50px;
 	left:70%;
 	transform: translate(-50%,-50%);
 	height: 40px;
@@ -58,6 +58,7 @@ body{
 	padding: 10px;
 	background:white;
 	transition: all 1s ease-out;
+	z-index: 9999;
 }
 
 .search-box:hover > .search-text{
@@ -110,4 +111,14 @@ body{
 
 .box-content{
 	margin: 20px;
+}
+
+.livesearch{
+	border: 2px solid black;
+	background-color: white;
+	width: 100%;
+	padding: 2px;
+	position: absolute;
+	visibility: hidden;
+	top:60px;
 }

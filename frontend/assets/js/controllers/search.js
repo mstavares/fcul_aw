@@ -9,6 +9,9 @@ if (searchTerm != undefined){
 
         var html = ajax.responseText;
         if (ajax.readyState == 4 && ajax.status == 200) {
+			document.getElementById("search-input").value="";
+			document.getElementById("livesearch").style.visibility = "hidden"; 
+
 			var content = JSON.parse(html);
 			var diseases = "<ul>";
 
