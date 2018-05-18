@@ -85,6 +85,9 @@ public class DiseaseCatalog {
 	private static final String SQL_GET_TWEET_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_tweets WHERE id_diseases = ?";
 	private static final String SQL_GET_IMAGE_DISEASE_MAX_FEEDBACK = "SELECT MAX(implicit_feedback), MAX(explicit_feedback) FROM diseases_images WHERE id_diseases = ?";
 	
+	private static final String SQL_GET_AVG_PUBMEDS_BY_DISEASE = "SELECT avg(a.num) as average FROM (SELECT diseases.id, COUNT(diseases_pubmed.id_pubmed) as num FROM diseases_pubmed, diseases WHERE diseases_pubmed.id_diseases = diseases.id GROUP BY diseases.id) as a";
+	private static final String SQL_GET_AVG_IMAGES_BY_DISEASE = "SELECT avg(a.num) as average FROM (SELECT diseases.id, COUNT(diseases_tweets.id_tweets) as num FROM diseases_tweets, diseases WHERE diseases_tweets.id_diseases = diseases.id GROUP BY diseases.id) as a";
+	private static final String SQL_GET_AVG_TWEETS_BY_DISEASE = "SELECT avg(a.num) as average FROM (SELECT diseases.id, COUNT(diseases_images.id_images) as num FROM diseases_images, diseases WHERE diseases_images.id_diseases = diseases.id GROUP BY diseases.id) as a";
 
     public DiseaseCatalog(Connection connection) {
         this.connection = connection;
@@ -529,10 +532,44 @@ public class DiseaseCatalog {
         int numberOfPubMeds = getNumberOf(SQL_COUNT_PUBMEDS);
         int numberOfTweets = getNumberOf(SQL_COUNT_TWEETS);
         int numberOfImages = getNumberOf(SQL_COUNT_IMAGES);
-        return new Statistic(numberOfDiseases, numberOfPubMeds, numberOfTweets, numberOfImages);
+        double avgPubmeds = getAvgPubmedsByDisease();
+        double avgTweets = getAvgTweetsByDisease();
+        double avgImages = getAvgImagesByDisease();
+        System.out.println("avgPubmeds= " + avgPubmeds + "===========================================================================");
+        return new Statistic(numberOfDiseases, numberOfPubMeds, numberOfTweets, numberOfImages, avgPubmeds, avgTweets, avgImages);
     }
 
-    public int getNumberOf(String countQuery) throws SQLException {
+    private double getAvgImagesByDisease() throws SQLException {
+    	double avg = -1;
+        Statement statement = connection.createStatement();
+        try(ResultSet result = statement.executeQuery(SQL_GET_AVG_IMAGES_BY_DISEASE)){
+            if(result.next())
+                avg = result.getDouble(1);
+        }
+        return avg;
+	}
+
+	private double getAvgTweetsByDisease() throws SQLException {
+		double avg = -1;
+        Statement statement = connection.createStatement();
+        try(ResultSet result = statement.executeQuery(SQL_GET_AVG_TWEETS_BY_DISEASE)){
+            if(result.next())
+                avg = result.getDouble(1);
+        }
+        return avg;
+	}
+
+	private double getAvgPubmedsByDisease() throws SQLException {
+		double avg = -1;
+        Statement statement = connection.createStatement();
+        try(ResultSet result = statement.executeQuery(SQL_GET_AVG_PUBMEDS_BY_DISEASE)){
+            if(result.next())
+                avg = result.getDouble(1);
+        }
+        return avg;
+	}
+
+	public int getNumberOf(String countQuery) throws SQLException {
         int count = 0;
         Statement statement = connection.createStatement();
         try(ResultSet result = statement.executeQuery(countQuery)){
@@ -808,4 +845,6 @@ public class DiseaseCatalog {
         }
         return results;
 	}
+	
+	
 }
