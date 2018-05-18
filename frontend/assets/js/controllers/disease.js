@@ -54,9 +54,11 @@ if (diseaseId != undefined){
 			for (var i = 0; i < content.articles.length; i++){
 				var pubmedId = content.articles[i].id;
 				var args = diseaseId + ", " + pubmedId + ", 4";
+				var ExplicitUp = diseaseId + ", " + pubmedId + ", 1";
 				var argsImplicit = diseaseId + ", " + pubmedId + ", 0";
 				articles += "<div class='pubmed-container'>"
-					articles += "<div class='pubmed-feedback' onclick='updatePubMedFeedback(" + args + ")'>not relevant</div>"
+					articles += "<div class='pubmed-feedback'><a onclick='updatePubMedFeedback(" + args + ")'><i class='fas fa-thumbs-down'></i></a>"
+					articles += "<a onclick='updatePubMedFeedback(" + ExplicitUp + ")'><i class='fas fa-thumbs-up'></i></a></div>"
 					articles += "<div class='pubmed-title'><a target='blank' href='https://www.ncbi.nlm.nih.gov/pubmed/" + content.articles[i].pubMedId + "' onclick=updatePubMedFeedback(" + argsImplicit + ")'>" + content.articles[i].title + "</a></div>"
 					articles += "<div class='pubmed-description'>" + content.articles[i].description + "</div>"
 					articles += "<div class='pubmed-related'><b>Related diseases:</b> "; 
@@ -78,7 +80,7 @@ if (diseaseId != undefined){
 			for (var i = 0; i < content.tweets.length; i++){
 				tweets += "<div class='tweet-container'>"
 					tweets += "<div class='tweet-description'>" + content.tweets[i].description + "</div>"
-					tweets += "<div class='tweet-date'>" + content.tweets[i].pubDate + "</div>"
+					tweets += "<div class='tweet-date'><a target='blank' href='https://twitter.com/statuses/" + content.tweets[i].url + "'>" + content.tweets[i].pubDate + "</a></div>"
 				tweets += "</div>";
 			}
 
