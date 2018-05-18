@@ -27,33 +27,40 @@ if (diseaseId != undefined){
         if (ajax.readyState == 4 && ajax.status == 200) {
 			document.getElementById("search-input").value="";
 			document.getElementById("livesearch").style.visibility = "hidden"; 
-			
+
 			var content = JSON.parse(html);
 
 			document.getElementById('disease-name').innerHTML = "Disease: " + content.name;
 
 			var info = "";
+			var articles = "";
+			var tweets = "";
 
-			info += "Disease id: " + content.id + "<br />";
-			info += "Disease name: " + content.name + "<br />";
-			info += "Disease description: " + content.description + "<br />";
-			info += "Wikipedia: " + content.derivedFrom + "<br />";
-			info += "Field: " + content.field + "<br />";
-			info += "Dead: " + content.dead + "<br />";
+			info += "<b>Database id:</b> " + content.id + "<br />";
+			info += "<b>Disease description:</b> " + content.description + "<br />";
+			info += "<b>Wikipedia link:</b> " + content.derivedFrom + "<br />";
+			info += "<b>Field:</b> " + content.field + "<br />";
+			info += "<b>People killed by this disease:</b> " + content.dead + "<br />";
 
 			for (var i = 0; i < content.articles.length; i++){
-				info += "Artigo " + i + ": " + content.articles[i].title + "<br />";
+				articles += "<p><b>" + content.articles[i].title + "</b><br />";
+				articles += "<p>" + content.articles[i].description + "</p>";
 			}
 			
 			for (var i = 0; i < content.images.length; i++){
-				info += "Imagem " + i + ": " + content.images[i].url + "<br />";
+				var img = document.createElement("img");
+				img.setAttribute('src', content.images[i].url);
+				img.setAttribute('class', 'mySlides');
+				document.getElementById("slide-container").appendChild(img);
 			}
 
 			for (var i = 0; i < content.tweets.length; i++){
-				info += "Tweet " + i + ": " + content.tweets[i].url + "<br />";
+				tweets += " " + content.tweets[i].description + "<br />";
 			}
 
 			document.getElementById('disease').innerHTML = info;
+			document.getElementById('articles').innerHTML = articles;
+			document.getElementById('tweets').innerHTML = tweets;
         }
 
 

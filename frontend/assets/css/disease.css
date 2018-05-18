@@ -1,8 +1,5 @@
 .mySlides{
 	display: none;
-	position: absolute;
-	top: 30%;
-	right:80px;
 	height: 300px;
 	width: 300px;
 	
@@ -10,9 +7,6 @@
 
 .previous_btn, .next_btn {
 	cursor: pointer;
-	position: absolute;
-	top: 25%;
-	right:10%;
 	width: auto;
 	margin-top: -22px;
 	padding: 16px;
@@ -34,8 +28,23 @@
 }
 
 .pause_btn{
-	position: absolute;
-	top: 25%;
-	right:113px;
 	color: #0054a6;
+}
+
+.disease-box{
+	margin-top: 50px;
+	width: 65%;
+	float: left;
+}
+
+.img-box{
+	margin-top: 50px;
+	width: 31%;
+	float: right;
+}
+
+.wrapper{
+    width: 95%;
+    margin: auto;
+    padding: 10px;
 }
