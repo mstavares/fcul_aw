@@ -2,7 +2,13 @@ package pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto;
 
 public class FullFeedback {
 
-    public enum Operations { INCREMENT_IMPLICIT, INCREMENT_EXPLICIT, DECREMENT_IMPLICIT, DECREMENT_EXPLICIT }
+    public enum Operations {
+        INCREMENT_IMPLICIT,
+        INCREMENT_EXPLICIT,
+        DECREMENT_IMPLICIT,
+        DECREMENT_EXPLICIT
+    }
+
     private int diseaseId;
     private int objectId;
     private int implicitFeedback;

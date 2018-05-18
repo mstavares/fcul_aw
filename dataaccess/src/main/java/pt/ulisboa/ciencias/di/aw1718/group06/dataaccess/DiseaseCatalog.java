@@ -1,18 +1,16 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.dataaccess;
 
-import com.mysql.cj.jdbc.MysqlDataSource;
+import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.dto.*;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.*;
-import javafx.util.Pair;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.sql.*;
-import java.sql.Date;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class DiseaseCatalog {
 
@@ -69,7 +67,9 @@ public class DiseaseCatalog {
     private static final String SQL_SELECT_DISEASE_PUBMED_TF = "SELECT tf FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
     private static final String SQL_UPDATE_DISEASE_PUBMED_TF = "UPDATE diseases_pubmed SET tf = ? WHERE id_diseases = ? AND id_pubmed = ?";
     private static final String SQL_SELECT_DISEASE_PLACES_ON_PUBMED = "SELECT places FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
-    
+    private static final String SQL_UPDATE_DISEASE_PUBMED_RANK = "UPDATE diseases_pubmed SET rank = ? WHERE id_diseases = ? AND id_pubmed = ?";
+	private static final String SQL_SELECT_DISEASE_PUBMED_RANK = "SELECT rank FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
+
     /*  DISEASES_TWEETS*/
     private static final String SQL_SELECT_PAIR_DISEASEID_TWEETID = "SELECT * FROM diseases_tweets WHERE id_diseases = ? AND id_tweets = ?";
     private static final String SQL_SELECT_TWEET_FEEDBACK = "SELECT * FROM diseases_tweets WHERE id_diseases = ? AND id_tweets = ?;";
@@ -160,22 +160,6 @@ public class DiseaseCatalog {
 		}
 		return results;
 	}
-
-	/*
-	public List<Pair<Integer, IndexRank>> getRankedPubMeds(int diseaseId) throws SQLException {
-        CompoundRanker ranker = new CompoundRanker(ImmutableMap.of(
-                RankType.TF_IDF_RANK, 0.3,
-                RankType.DATE_RANK, 0.1,
-                RankType.EXPLICIT_FEEDBACK_RANK, 0.4,
-                RankType.IMPLICIT_FEEDBACK_RANK, 0.2
-        ));
-
-        Index index = new Index(ranker, this);
-        index.build();
-
-        return index.getArticlesFor(diseaseId);
-    }
-    */
 
 	public Disease getDisease(String searchTerm) throws SQLException {
 		Disease disease = null;
@@ -589,6 +573,28 @@ public class DiseaseCatalog {
         return diseases;
     }
 
+	public double getDiseasePubMedRank(int diseaseId, int pubmedId) throws SQLException {
+		PreparedStatement stmt = connection.prepareStatement(SQL_SELECT_DISEASE_PUBMED_RANK);
+		stmt.setInt(1, diseaseId);
+		stmt.setInt(2, pubmedId);
+		try (ResultSet result = stmt.executeQuery()) {
+			if (result.next()) {
+				return result.getDouble("rank");
+			}
+		}
+		throw new SQLException("Getting the rank failed, no results.");
+	}
+
+	public void updateDiseasePubMedRank(int diseaseId, int pubmedId, double rank) throws SQLException {
+		PreparedStatement stmt = connection.prepareStatement(SQL_UPDATE_DISEASE_PUBMED_RANK);
+		stmt.setDouble(1, rank);
+		stmt.setInt(2, diseaseId);
+		stmt.setInt(3, pubmedId);
+		int affected = stmt.executeUpdate();
+		if (affected == 0) {
+			throw new SQLException("Updating rank failed, no rows affected.");
+		}
+	}
 
     ///////////////////////////////////////  TWEETS //////////////////////////////////////////////////
     public List<Tweet> getAllTweets() throws SQLException{

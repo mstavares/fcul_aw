@@ -34,28 +34,32 @@ public class Index {
     public List<Pair<Integer, IndexRank>> getArticlesFor(int diseaseId) throws SQLException {
         List<Pair<Integer, IndexRank>> finalRanking = new ArrayList<>();
 
-        Feedback maxFb = catalog.getPubMedMaxFeedback(diseaseId);
         for (Pair<Integer, RankingData> pmToRD : index.get(diseaseId)) {
             int pmId = pmToRD.getKey();
-            Feedback fb = catalog.getDiseasePubMedFeedback(diseaseId, pmId);
-
-            double normImplicit = (maxFb.getImplicitFeedback() == 0
-                ? fb.getImplicitFeedback()
-                : fb.getImplicitFeedback() / (double) maxFb.getImplicitFeedback());
-            double normExplicit = (maxFb.getExplicitFeedback() == 0
-                ? fb.getExplicitFeedback()
-                : fb.getExplicitFeedback() / (double) maxFb.getExplicitFeedback());
-            RankingData newRd = new RankingData(
-                pmToRD.getValue().getTfidf(),
-                pmToRD.getValue().getNormalizedDate(),
-                normImplicit,
-                normExplicit);
-
-            finalRanking.add(new Pair<>(pmId, ranker.computeRank(newRd)));
+            double rank = catalog.getDiseasePubMedRank(diseaseId, pmId);
+            finalRanking.add(new Pair<>(pmId, new NumericalRank(rank)));
         }
         // sort in descending order
         finalRanking.sort((o1, o2) -> -Double.compare(o1.getValue().get(), o2.getValue().get()));
         return ImmutableList.copyOf(finalRanking);
+    }
+
+    /**
+     * Computes and updates ranks stored in the catalog for all articles related to a given {@code diseaseId}.
+     * Should be called if any feedback data for any of the articles related to the {@code diseaseId} has changed.
+     *
+     * @param diseaseId
+     * @throws SQLException
+     */
+    public void updateRankOfPubMedsForDisease(int diseaseId) throws SQLException {
+        List<Pair<Integer, RankingData>> rankedPubmeds = index.get(diseaseId);
+
+        Feedback maxFb = catalog.getPubMedMaxFeedback(diseaseId);
+        for (Pair<Integer, RankingData> pm : rankedPubmeds) {
+            Feedback fb = catalog.getDiseasePubMedFeedback(diseaseId, pm.getKey());
+            RankingData newRd = getDataWithNormalizedFeedback(fb, maxFb, pm.getValue());
+            catalog.updateDiseasePubMedRank(diseaseId, pm.getKey(), ranker.computeRank(newRd).get());
+        }
     }
 
     /**
@@ -72,6 +76,27 @@ public class Index {
 
         computeAndStoreTfIdf(disIds, pubMedsAnnotated);
         index.putAll(getPrecomputedRankingData(disIds, pubMedsAnnotated));
+        computeRanks();
+    }
+
+    private void computeRanks() throws SQLException {
+        for (int disId : index.keySet()) {
+            updateRankOfPubMedsForDisease(disId);
+        }
+    }
+
+    private RankingData getDataWithNormalizedFeedback(Feedback fb, Feedback maxFb, RankingData ranking) throws SQLException {
+        double normImplicit = (maxFb.getImplicitFeedback() == 0
+            ? fb.getImplicitFeedback()
+            : fb.getImplicitFeedback() / (double) maxFb.getImplicitFeedback());
+        double normExplicit = (maxFb.getExplicitFeedback() == 0
+            ? fb.getExplicitFeedback()
+            : fb.getExplicitFeedback() / (double) maxFb.getExplicitFeedback());
+        return new RankingData(
+            ranking.getTfidf(),
+            ranking.getNormalizedDate(),
+            normImplicit,
+            normExplicit);
     }
 
     private List<Pair<Integer, List<Integer>>> getPubMedsAnnotated(List<Integer> pubmeds) throws SQLException {
@@ -138,4 +163,6 @@ public class Index {
         }
         return ind;
     }
+
+
 }
