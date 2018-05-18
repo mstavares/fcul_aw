@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+@CrossOrigin
 @RestController
 @RequestMapping("/disease")
 public class DiseaseService {

@@ -1,0 +1,50 @@
+.mySlides{
+	display: none;
+	height: 300px;
+	width: 300px;
+	
+}
+
+.previous_btn, .next_btn {
+	cursor: pointer;
+	width: auto;
+	margin-top: -22px;
+	padding: 16px;
+	color: #0054a6;
+	font-weight: bold;
+	font-size: 18px;
+	transition: 0.6s ease;
+	border-radius: 0 3px 3px 0;
+}
+
+.next_btn {
+	right: 80px;
+	border-radius: 3px 0 0 3px;
+}
+
+.previous_btn {
+	right: 120px;
+	border-radius: 3px 0 0 3px;
+}
+
+.pause_btn{
+	color: #0054a6;
+}
+
+.disease-box{
+	margin-top: 50px;
+	width: 65%;
+	float: left;
+}
+
+.img-box{
+	margin-top: 50px;
+	width: 31%;
+	float: right;
+}
+
+.wrapper{
+    width: 95%;
+    margin: auto;
+    padding: 10px;
+}
