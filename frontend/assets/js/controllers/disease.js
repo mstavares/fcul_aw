@@ -47,9 +47,14 @@ if (diseaseId != undefined){
 			for (var i = 0; i < content.articles.length; i++){
 				articles += "<div class='pubmed-container'>"
 					articles += "<div class='pubmed-feedback' onclick='updatePubMedFeedback()'></div>"
-					articles += "<div class='pubmed-title'>" + content.articles[i].title + "</div>"
+					articles += "<div class='pubmed-title'><a href='https://www.ncbi.nlm.nih.gov/pubmed/" + content.articles[i].pubMedId + "'>" + content.articles[i].title + "</a></div>"
 					articles += "<div class='pubmed-description'>" + content.articles[i].description + "</div>"
-					articles += "<div class='pubmed-related'>" + content.articles[i].mentionedDiseases + "</div>"
+					articles += "<div class='pubmed-related'><b>Related diseases:</b> "; 
+					for (var j = 0; j < content.articles[i].mentionedDiseases.length; j++){
+						articles+= "<a href='#disease=" + content.articles[i].mentionedDiseases[j].id + "'>" + content.articles[i].mentionedDiseases[j].name + ", </a>"
+					}
+					articles+= "</div>";
+
 				articles += "</div>";
 			}
 			
