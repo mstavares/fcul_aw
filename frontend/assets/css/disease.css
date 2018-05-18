@@ -50,34 +50,41 @@
 }
 
 
-.pubmed-container{
-	
-}
-
-.pubmed-title{
-	font-weight: bold;
-}
-
 .pubmed-feedback{
 
 }
 
-.pubmed-description{
-
-}
 
 .pubmed-related{
 
 }
 
-.tweet-container{
+.pubmed-similar{
 
 }
 
-.tweet-description{
-	
-}
 
 .tweet-date{
 	
+}
+
+.tweet-container{
+    padding-bottom: 10px;
+}
+
+.tweet-description{
+    text-align: justify;
+    color: #0054a6;
+}
+.pubmed-description{
+    text-align: justify;
+
+}
+.pubmed-container{
+    padding-bottom: 10px;
+}
+
+.pubmed-title{
+    font-weight: bold;
+    color: #0054a6;
 }
