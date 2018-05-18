@@ -40,7 +40,7 @@ public class FlickrCrawler extends Crawler {
 			PhotoList<Photo> photos = flickr.getPhotosInterface().search(searchParameters, NUMBER_OF_IMAGES, 0);
 			for(Photo photo : photos) {
 				try {
-					diseaseCatalog.createImage(disease, photo.getUrl());
+					diseaseCatalog.createImage(disease, photo.getLargeUrl());
 				} catch (SQLException e) {
 					//LOGGER.error("Error while writing to database: ", e);
 					return false;
