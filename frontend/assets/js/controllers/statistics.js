@@ -5,10 +5,10 @@ ajax.onreadystatechange = function () {
 		var content = JSON.parse(html);
 		var stats = "<ul>";
 		
-		stats += "<li>Total number of Diseases: " + stats.numberOfDiseases + "</li>";
-		stats += "<li>Total number of PubMeds: " + stats.numberOfPubMeds + "</li>";
-		stats += "<li>Total number of Tweets: " + stats.numberOfTweets + "</li>";
-		stats += "<li>Total number of Images: " + stats.numberOfImages + "</li>";
+		stats += "<li>Total number of Diseases: " + content.numberOfDiseases + "</li>";
+		stats += "<li>Total number of PubMeds: " + content.numberOfPubMeds + "</li>";
+		stats += "<li>Total number of Tweets: " + content.numberOfTweets + "</li>";
+		stats += "<li>Total number of Images: " + content.numberOfImages + "</li>";
 
 		stats += "</ul>";
 		
