@@ -57,20 +57,21 @@ public class DiseaseService {
     }
 
     @RequestMapping(value="/get/{id}", method=RequestMethod.GET, produces="application/json")
-    public FullDisease getFullDisease(@PathVariable int id) throws SQLException {
+    public FullDisease getFullDisease(@PathVariable int id) throws SQLException, IOException {
         return buildFullDisease(id);
     }
 
 
-    private FullDisease buildFullDisease(int diseaseId) throws SQLException {
+    private FullDisease buildFullDisease(int diseaseId) throws SQLException, IOException {
         Disease disease = diseaseCatalog.getDisease(String.valueOf(diseaseId));
         List<Pair<Integer, IndexRank>> rankedPubMeds = index.getArticlesFor(diseaseId);
         List<FullPubMed> pubmeds = getFullPubmeds(rankedPubMeds, diseaseId);
         List<FullTweet> tweets = diseaseCatalog.getOrderedTweets(diseaseId);
         List<FullImage> images = diseaseCatalog.getOrderedImages(diseaseId);
+        List<Disease> diseases = diseaseCatalog.getTopRelatedDiseases(5, diseaseId);
         
         return new FullDisease(disease.getId(), disease.getDoid(), disease.getName(), disease.getDescription(), disease.getDerivedFrom(),
-                disease.getField(), disease.getDead(), pubmeds, images, tweets);
+                disease.getField(), disease.getDead(), pubmeds, images, tweets, diseases);
     }
     
     @RequestMapping(value="/get_top_articles", method=RequestMethod.GET, produces="application/json")

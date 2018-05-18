@@ -12,15 +12,17 @@ public class FullDisease extends Disease {
     private List<FullPubMed> articles = new ArrayList<>();
     private List<FullImage> images = new ArrayList<>();
     private List<FullTweet> tweets = new ArrayList<>();
+    private List<Disease> diseases = new ArrayList<>();
 
 
     public FullDisease() {}
 
-    public FullDisease(int id, String doid, String name, String diseaseAbstract, String derivedFrom, String field, String dead, List<FullPubMed> articles, List<FullImage> images, List<FullTweet> tweets) {
+    public FullDisease(int id, String doid, String name, String diseaseAbstract, String derivedFrom, String field, String dead, List<FullPubMed> articles, List<FullImage> images, List<FullTweet> tweets, List<Disease> diseases) {
         super(id, doid, name, diseaseAbstract, derivedFrom, field, dead);
         this.articles = articles;
         this.images = images;
         this.tweets = tweets;
+        this.diseases = diseases;
     }
 
 
@@ -46,5 +48,13 @@ public class FullDisease extends Disease {
 
     public void setTweets(List<FullTweet> tweets) {
         this.tweets = tweets;
+    }
+    
+    public List<Disease> getDiseases(){
+    	return diseases;
+    }
+    
+    public void setDisease(List<Disease> diseases) {
+    	this.diseases = diseases;
     }
 }
