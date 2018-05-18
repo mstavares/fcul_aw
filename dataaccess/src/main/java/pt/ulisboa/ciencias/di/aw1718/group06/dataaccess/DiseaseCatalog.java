@@ -58,8 +58,8 @@ public class DiseaseCatalog {
 	private static final String SQL_INSERT_IMAGE_DISEASE_LINKING = "INSERT INTO diseases_images (id_diseases, id_images) VALUES (?, ?)";
 
 	/*  DISEASES_PUBMED  */
-	private static final String SQL_SELECT_PUBMED_FEEDBACK = "SELECT * FROM diseases_pubmed WHERE id_diseases = ? AND pubmed.id = ?;";
-	private static final String SQL_UPDATE_PUBMED_FEEDBACK = "UPDATE diseases_pubmed SET implicit_feedback = ?, explicit_feedback = ? WHERE id_diseases = ? AND pubmed.id = ?;";
+	private static final String SQL_SELECT_PUBMED_FEEDBACK = "SELECT * FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?;";
+	private static final String SQL_UPDATE_PUBMED_FEEDBACK = "UPDATE diseases_pubmed SET implicit_feedback = ?, explicit_feedback = ? WHERE id_diseases = ? AND id_pubmed = ?;";
 	private static final String SQL_SELECT_PAIR_DISEASEID_PUBMEDID = "SELECT * FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
 	private static final String SQL_SELECT_PUBMED_RELATED_DISEASES = "SELECT d.id, d.name, dp.places FROM diseases d, diseases_pubmed dp WHERE d.id=dp.id_diseases AND dp.id_pubmed = ?";
 	private static final String SQL_SELECT_PUBMED_RELATED_DISEASE_IDS = "SELECT id_diseases FROM diseases_pubmed WHERE id_pubmed = ?";
@@ -72,12 +72,12 @@ public class DiseaseCatalog {
     
     /*  DISEASES_TWEETS*/
     private static final String SQL_SELECT_PAIR_DISEASEID_TWEETID = "SELECT * FROM diseases_tweets WHERE id_diseases = ? AND id_tweets = ?";
-    private static final String SQL_SELECT_TWEET_FEEDBACK = "SELECT * FROM diseases_tweets WHERE id_diseases = ? AND tweets.id = ?;";
-    private static final String SQL_UPDATE_TWEET_FEEDBACK = "UPDATE diseases_tweets SET implicit_feedback = ?, explicit_feedback = ? WHERE id_diseases = ? AND tweets.id = ?;";
+    private static final String SQL_SELECT_TWEET_FEEDBACK = "SELECT * FROM diseases_tweets WHERE id_diseases = ? AND id_tweets = ?;";
+    private static final String SQL_UPDATE_TWEET_FEEDBACK = "UPDATE diseases_tweets SET implicit_feedback = ?, explicit_feedback = ? WHERE id_diseases = ? AND id_tweets = ?;";
 
     /*  DISEASES_IMAGES */
-    private static final String SQL_SELECT_IMAGE_FEEDBACK = "SELECT * FROM diseases_images WHERE id_diseases = ? AND image.id = ?;";
-    private static final String SQL_UPDATE_IMAGE_FEEDBACK = "UPDATE diseases_images SET implicit_feedback = ?, explicit_feedback = ? WHERE id_diseases = ? AND image.id = ?;";
+    private static final String SQL_SELECT_IMAGE_FEEDBACK = "SELECT * FROM diseases_images WHERE id_diseases = ? AND id_images = ?;";
+    private static final String SQL_UPDATE_IMAGE_FEEDBACK = "UPDATE diseases_images SET implicit_feedback = ?, explicit_feedback = ? WHERE id_diseases = ? AND id_images = ?;";
 
     /* FEEDBACK QUERIES */
     private static final String SQL_GET_PUBMED_DISEASE_FEEDBACK = "SELECT implicit_feedback, explicit_feedback FROM diseases_pubmed WHERE id_diseases = ? AND id_pubmed = ?";
