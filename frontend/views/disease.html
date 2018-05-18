@@ -1,34 +1,36 @@
 <link href="/assets/css/disease.css" rel="stylesheet" type="text/css">
- 
-<!-- Slide Show -->
-<div class="slide_control">
-	<li><a class="pause_btn" href="#">
-		<i class="fas fa-pause"></i></a></li>
-	<li><a class="previous_btn" onclick="plusSlides(-1)">&#10094;</a></li>
-	<li><a class="next_btn" onclick="plusSlides(1)">&#10095;</a></li>
-		
 
-	<section>
-		<img class="mySlides" src="t1.png">
-		<img class="mySlides" src="t2.png">
-		<img class="mySlides" src="t3.png">
-	</section>
+<div class="content-box">
+	<div class="box-title" id="disease-name">Disease</div>
+	<div class="box-content" id="disease"></div>
 </div>
 
-<script>
-	// Automatic Slideshow - change image every 3 seconds
-	var myIndex = 0;
-	carousel();
+<div class="content-box">
+	<div class="box-title">Articles</div>
+	<div class="box-content" id="articles"></div>
+</div>
 
-	function carousel() {
-	var i;
-	var x = document.getElementsByClassName("mySlides");
-	for (i = 0; i < x.length; i++) {
-		x[i].style.display = "none";
-	}
-	myIndex++;
-	if (myIndex > x.length) {myIndex = 1}
-	x[myIndex-1].style.display = "block";
-	setTimeout(carousel, 3000);
-	}
-</script>
+<div class="content-box">
+	<div class="box-title">Tweets</div>
+	<div class="box-content" id="tweets"></div>
+</div>
+
+<div class="content-box">
+	<div class="box-title">Images</div>
+	<div class="box-content">
+		<!-- Slide Show -->
+		<div class="slide_control">
+			<li><a class="pause_btn" href="#">
+				<i class="fas fa-pause"></i></a></li>
+			<li><a class="previous_btn" onclick="plusSlides(-1)">&#10094;</a></li>
+			<li><a class="next_btn" onclick="plusSlides(1)">&#10095;</a></li>
+				
+
+			<section>
+				<img class="mySlides" src="t1.png">
+				<img class="mySlides" src="t2.png">
+				<img class="mySlides" src="t3.png">
+			</section>
+		</div>
+	</div>
+</div>

@@ -9,7 +9,7 @@ body{
 	background-size:cover;
 	background-position:top;
 	transition: background-image 2s ease-out;
-	/*font-family: monospace;*/
+	font-family: "Tahoma";
 }
 
 .app-container{
@@ -91,8 +91,23 @@ body{
 	width: 240px;
 }
 
-
 .home-search{
     top: 20%;
     left:50%;
+}
+
+.content-box{
+	border: 5px solid #00a2ff;
+}
+
+.box-title{
+	width: 100%;
+	background-color: #00a2ff;
+	color: white;
+	text-align: center;
+	font-weight: bold;
+}
+
+.box-content{
+	margin: 20px;
 }
