@@ -1,60 +1,108 @@
 <div class="content-box">
 	<div class="box-title">Api</div>
 	<div class="box-content" id="api">
-		<h1>Disease Service</h1>
-		<ul>
-			<li>
-				<h3>GET top N related articles to a disease</h3>
-				<p>Usage: disease/get_top_articles?lim={lim}&diseaseId={diseaseId}</p>
-			</li>
-			<li>
-				<h3>GET first N diseases</h3>
-				<p>Usage: disease/get_all/{limit}</p>
-			</li>
-			<li>
-				<h3>GET diseases given a fragment of the name</h3>
-				<p>Usage: disease/get_fragment/{fragment}</p>
-			</li>
-			<li>
-				<h3>GET full disease</h3>
-				<p>Usage: disease/get/{id}</p>
-			</li>
-			<li>
-				<h3>GET Top N related diseases</h3>
-				<p>Usage: disease/get_top_related_diseases?lim={lim}&diseaseId={diseaseId}</p>
-			</li>
-			<li>
-				<h3>GET statistics</h3>
-				<p>Usage: disease/get_statistics</p>
-			</li>
-		</ul>
+	<h3>Base URL: http://appserver.alunos.di.fc.ul.pt:8086/~aw006/project/</h3>
+		<div style="margin-top: 30px">
+			<h1>Disease Service</h1>
+			<ul style="margin-left: 30px">
+				<li>
+					<h3>GET top N related articles to a disease</h3>
+					<p>Usage: disease/get_top_articles?lim={lim}&diseaseId={diseaseId}</p>
+					Example: <a href="http://appserver.alunos.di.fc.ul.pt:8086/~aw006/project/disease/get_top_articles?lim=3&diseaseId=2">
+						Base URL + disease/get_top_articles?lim=3&diseaseId=2
+					</a>
+				</li>
+				<br>
+				<li>
+					<h3>GET first N diseases</h3>
+					<p>Usage: disease/get_all/{limit}</p>
+					Example: <a href="http://appserver.alunos.di.fc.ul.pt:8086/~aw006/project/disease/get_all/5">
+						Base URL + disease/get_all/5
+					</a>
+				</li>
+				<br>
+				<li>
+					<h3>GET diseases given a fragment of the name</h3>
+					<p>Usage: disease/get_fragment/{fragment}</p>
+					Example: <a href="http://appserver.alunos.di.fc.ul.pt:8086/~aw006/project/disease/get_fragment/as">
+						Base URL + disease/get_fragment/as
+					</a>
+				</li>
+				<br>
+				<li>
+					<h3>GET full disease</h3>
+					<p>Usage: disease/get/{id}</p>
+					Example: <a href="http://appserver.alunos.di.fc.ul.pt:8086/~aw006/project/disease/get/1">
+						Base URL + disease/get/1
+					</a>
+				</li>
+				<br>
+				<li>
+					<h3>GET Top N related diseases</h3>
+					<p>Usage: disease/get_top_related_diseases?lim={lim}&diseaseId={diseaseId}</p>
+					Example: <a href="http://appserver.alunos.di.fc.ul.pt:8086/~aw006/project/disease/get_top_related_diseases?lim=3&diseaseId=2">
+						Base URL + disease/get_top_related_diseases?lim=3&diseaseId=2
+					</a>
+				</li>
+				<br>
+				<li>
+					<h3>GET statistics</h3>
+					<p>Usage: disease/get_statistics</p>
+					Example: <a href="http://appserver.alunos.di.fc.ul.pt:8086/~aw006/project/disease/get_statistics">
+						Base URL + disease/get_statistics
+					</a>
+				</li>
+			</ul>
+		</div>
 		
-		<h1>Pubmed Service</h1>
-		<ul>
-			<li>
-				<h3>GET diseases mentioned in an article and where they appear in text</h3>
-				<p>Usage: pubmed/get_mentioned_diseases/{pubmedId}</p>
-			</li>
-		</ul>
+		<div style="margin-top: 30px">
+			<h1>Pubmed Service</h1>
+			<ul style="margin-left: 30px">
+				<li>
+					<h3>GET diseases mentioned in an article and where they appear in text</h3>
+					<p>Usage: pubmed/get_mentioned_diseases/{pubmedId}</p>
+					Example: <a href="http://appserver.alunos.di.fc.ul.pt:8086/~aw006/project/pubmed/get_mentioned_diseases/5">
+						Base URL + pubmed/get_mentioned_diseases/5
+					</a>
+				</li>
+			</ul>
+		</div>
 		
-		<h1>Feedback Service</h1>
-		<ul>
-			<li>
-				<h3>Change feedback on pubmed</h3>
-				<p>Usage: feedback/pubmed?diseaseId={id}&pubmedId={pId}&operation={op}</p>
-			</li>
-			<li>
-				<h3>Change feedback on tweets</h3>
-				<p>Usage: feedback/tweet?diseaseId={id}&tweetId={tId}&operation={op}</p>
-			</li>
-			<li>
-				<h3>Change feedback on images</h3>
-				<p>Usage: feedback/image?diseaseId={id}&imageId={iId}&operation={op}</p>
-			</li>
-		</ul>
-		<p> op = 0 => increment implicit feedback</p>
-		<p> op = 1 => increment explicit feedback</p>
-		<p> op = 2 => decrement implicit feedback</p>
-		<p> op = 3 => decremente explicit feedback</p>
+		<div style="margin-top: 30px">
+			<h1>Feedback Service</h1>
+			<ul style="margin-left: 30px">
+				<li>
+					<h3>Change feedback on pubmed</h3>
+					<p>Usage: feedback/pubmed?diseaseId={id}&pubmedId={pId}&operation={op}</p>
+					Example: <a href="http://appserver.alunos.di.fc.ul.pt:8086/~aw006/feedback/pubmed?diseaseId=33&pubmedId=279&operation=0">
+						Base URL + feedback/pubmed?diseaseId=33&pubmedId=279&operation=0
+					</a>
+				</li>
+				<br>
+				<li>
+					<h3>Change feedback on tweets</h3>
+					<p>Usage: feedback/tweet?diseaseId={id}&tweetId={tId}&operation={op}</p>
+					Example: <a href="http://appserver.alunos.di.fc.ul.pt:8086/~aw006/feedback/tweet?diseaseId=1&tweetIdId=10&operation=1">
+						Base URL + feedback/tweet?diseaseId=1&tweetIdId=10&operation=1
+					</a>
+				</li>
+				<br>
+				<li>
+					<h3>Change feedback on images</h3>
+					<p>Usage: feedback/image?diseaseId={id}&imageId={iId}&operation={op}</p>
+					Example: <a href="http://appserver.alunos.di.fc.ul.pt:8086/~aw006/feedback/image?diseaseId=1&imageId=1&operation=2">
+						Base URL + feedback/image?diseaseId=1&imageId=1&operation=2
+					</a>
+				</li>
+				
+			</ul>
+			<br>
+			<p> op = 0 => increment implicit feedback</p>
+			<p> op = 1 => increment explicit feedback</p>
+			<p> op = 2 => decrement implicit feedback</p>
+			<p> op = 3 => decremente explicit feedback</p>
+		</div>
+		
+		
 	</div>
 </div>
