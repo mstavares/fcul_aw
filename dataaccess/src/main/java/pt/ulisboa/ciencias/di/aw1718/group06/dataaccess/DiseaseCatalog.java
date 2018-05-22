@@ -232,7 +232,7 @@ public class DiseaseCatalog {
 	}
 
 	///////////////////////////////////////  PUBMED //////////////////////////////////////////////////
-	public PubMed addPubMedInfo(int diseaseID, int pubmedID, String title, String abstrct, Date date) throws SQLException {
+	public PubMed addPubMedInfo(int diseaseID, int pubmedID, String title, String abstrct, Date date, String places) throws SQLException {
 
 		PreparedStatement statement = connection.prepareStatement(SQL_SELECT_ID_BY_PUBMEDID, Statement.RETURN_GENERATED_KEYS);
 		statement.setString(1, String.valueOf(pubmedID));
@@ -243,7 +243,7 @@ public class DiseaseCatalog {
 				//pubmed article already exists in table pubmed
 				//add linking to this disease
 				int id = keys.getInt("id");
-				addPubMedDiseaseLink(diseaseID, id, 1, "");
+				addPubMedDiseaseLink(diseaseID, id, 1, places);
 				return new PubMed(id, pubmedID, title, abstrct);
 			} else {
 				statement = connection.prepareStatement(SQL_INSERT_PUBMED, Statement.RETURN_GENERATED_KEYS);
@@ -262,7 +262,7 @@ public class DiseaseCatalog {
 					if (kys.next()) {
 						int id = kys.getInt(1);
 						// Add entry in linking table.
-						addPubMedDiseaseLink(diseaseID, id, 1, "");
+						addPubMedDiseaseLink(diseaseID, id, 1, places);
 						return new PubMed(id, pubmedID, title, abstrct);
 					}
 				}

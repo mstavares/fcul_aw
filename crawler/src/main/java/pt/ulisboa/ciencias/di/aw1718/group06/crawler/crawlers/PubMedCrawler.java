@@ -1,10 +1,15 @@
 package pt.ulisboa.ciencias.di.aw1718.group06.crawler.crawlers;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
 import java.sql.SQLException;
 import java.text.ParseException;
@@ -21,6 +26,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import javafx.util.Pair;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.models.Disease;
 import pt.ulisboa.ciencias.di.aw1718.group06.dataaccess.DiseaseCatalog;
 
@@ -28,6 +34,7 @@ public class PubMedCrawler extends Crawler {
 	
 	private final String BASE_URL_SEARCH_IDS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmax=%d&retmode=xml&term=%s";
 	private final String BASE_URL_ARTICLE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=text&rettype=xml&id=%d";
+	private final static String BASE_URL_MER = "http://labs.fc.ul.pt/mer/api.php?lexicon=disease&text=";
 	private static final Logger logger = LoggerFactory.getLogger(PubMedCrawler.class);
 	//TODO we will need this eventually private final String BASE_URL_PUBMED = "https://www.ncbi.nlm.nih.gov/pubmed/%d";
 
@@ -63,9 +70,10 @@ public class PubMedCrawler extends Crawler {
 				String abstrct = getTagValue(doc, ABSTRACT_TAG_NAME);
 				String date = getDateAsString(doc);
 				Date dt = getDate(date);
-				
+								
 				if(abstrct != null && title != null) {
-					diseaseCatalog.addPubMedInfo(disease.getId(), id, title, abstrct, new java.sql.Date(dt.getTime()));
+					String places = getPlaces(abstrct, disease.getName());
+					diseaseCatalog.addPubMedInfo(disease.getId(), id, title, abstrct, new java.sql.Date(dt.getTime()), places);
 				}
 					
 			}
@@ -83,6 +91,31 @@ public class PubMedCrawler extends Crawler {
 			return false;
 		}	
 		return true;
+	}
+
+
+	private String getPlaces(String abstrct, String diseaseName) throws MalformedURLException, UnsupportedEncodingException {
+		logger.info("Getting places for: " + diseaseName);
+		String places = "";
+		URL url = new URL(BASE_URL_MER + URLEncoder.encode(abstrct, "UTF-8"));
+		BufferedReader reader;
+		try{
+			InputStream is = url.openConnection().getInputStream();
+			reader = new BufferedReader(new InputStreamReader(is));
+			String s = "";
+			while((s = reader.readLine()) != null) {
+				String [] split = s.split("\t");
+				if(diseaseName.toLowerCase().equals(split[split.length-1].toLowerCase())) {
+					places += (split[0] + ";");
+				}
+			}
+			reader.close();
+		} catch(IOException e) {
+			logger.error("Error getting places: " + e);
+			return null;
+		}
+		logger.info("Got " + places.length() + " places for: " + diseaseName);
+		return places;
 	}
 
 
