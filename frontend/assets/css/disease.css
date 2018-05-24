@@ -41,6 +41,7 @@
 	margin-top: 50px;
 	width: 31%;
 	float: right;
+	text-align: center;
 }
 
 .wrapper{
@@ -91,4 +92,8 @@
 
 .tweet-feedback{
 
+}
+
+a:hover{
+	cursor: pointer;
 }

@@ -36,6 +36,7 @@ if (diseaseId != undefined){
 			var info = "";
 			var articles = "";
 			var tweets = "";
+			var images = "";
 
 			info += "<b>Database id:</b> " + content.id + "<br />";
 			info += "<b>Disease description:</b> " + content.description + "<br />";
@@ -71,10 +72,15 @@ if (diseaseId != undefined){
 			}
 			
 			for (var i = 0; i < content.images.length; i++){
-				var img = document.createElement("img");
-				img.setAttribute('src', content.images[i].url);
-				img.setAttribute('class', 'mySlides');
-				document.getElementById("slide-container").appendChild(img);
+				var imgId = content.images[i].id;
+				var args = diseaseId + ", " + imgId + ", 3";
+				var ExplicitUp = diseaseId + ", " + imgId + ", 1";
+				var argsImplicit = diseaseId + ", " + imgId + ", 0";
+				images += "<div class='mySlides'>";
+					images += "<a target='blank' href='" + content.images[i].url + "' onclick='updateImgFeedback(" + argsImplicit + ")'><img src='" + content.images[i].url + "'></img></a>";
+					images += "<a onclick='updateImgFeedback(" + args + ")'><i class='fas fa-thumbs-down'></i></a>";
+					images += "<a onclick='updateImgFeedback(" + ExplicitUp + ")'><i class='fas fa-thumbs-up'></i></a>";
+				images += "</div>";
 			}
 
 			for (var i = 0; i < content.tweets.length; i++){
@@ -84,7 +90,7 @@ if (diseaseId != undefined){
 				var argsImplicit = diseaseId + ", " + tweeetId + ", 0";
 				tweets += "<div class='tweet-container'>";
 					tweets += "<div class='tweet-description'>" + content.tweets[i].description + "</div>";
-					tweets += "<div class='pubmed-feedback'><a onclick='updateTweetFeedback(" + args + ")'><i class='fas fa-thumbs-down'></i></a>";
+					tweets += "<div class='tweet-feedback'><a onclick='updateTweetFeedback(" + args + ")'><i class='fas fa-thumbs-down'></i></a>";
 					tweets += "<a onclick='updateTweetFeedback(" + ExplicitUp + ")'><i class='fas fa-thumbs-up'></i></a></div>";
 					tweets += "<div class='tweet-date'><a target='blank' href='https://twitter.com/statuses/" + content.tweets[i].url + "' onclick='updateTweetFeedback(" + argsImplicit + ")'>" + content.tweets[i].pubDate + "</a></div>";
 				tweets += "</div>";
@@ -93,6 +99,7 @@ if (diseaseId != undefined){
 			document.getElementById('disease').innerHTML = info;
 			document.getElementById('articles').innerHTML = articles;
 			document.getElementById('tweets').innerHTML = tweets;
+			document.getElementById('slide-container').innerHTML = images;
         }
 
 
