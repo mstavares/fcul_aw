@@ -1,8 +1,5 @@
 .mySlides{
 	display: none;
-	height: 300px;
-	width: 300px;
-	
 }
 
 .previous_btn, .next_btn {
@@ -41,6 +38,7 @@
 	margin-top: 50px;
 	width: 31%;
 	float: right;
+	text-align: center;
 }
 
 .wrapper{
@@ -65,11 +63,13 @@
 
 
 .tweet-date{
-	
+	text-align: right;
+	float: left;
+	padding-left: 30px;
 }
 
 .tweet-container{
-    padding-bottom: 10px;
+    padding-bottom: 20px;
 }
 
 .tweet-description{
@@ -87,4 +87,32 @@
 .pubmed-title{
     font-weight: bold;
     color: #0054a6;
+}
+
+.tweet-feedback{
+	text-align: right;
+	float: left;
+}
+
+a:hover{
+	cursor: pointer;
+}
+
+
+.activated{
+	color: #ff5700;
+}
+
+img {
+	display: block;
+	max-width:300px;
+	max-height:300px;
+	width: auto;
+	height: auto;
+  }
+
+.slide_control{
+	text-align: center;
+	width: 90%;
+	height: 400px;
 }

@@ -36,6 +36,7 @@ if (diseaseId != undefined){
 			var info = "";
 			var articles = "";
 			var tweets = "";
+			var images = "";
 
 			info += "<b>Database id:</b> " + content.id + "<br />";
 			info += "<b>Disease description:</b> " + content.description + "<br />";
@@ -53,17 +54,17 @@ if (diseaseId != undefined){
 
 			for (var i = 0; i < content.articles.length; i++){
 				var pubmedId = content.articles[i].id;
-				var args = diseaseId + ", " + pubmedId + ", 4";
-				var ExplicitUp = diseaseId + ", " + pubmedId + ", 1";
-				var argsImplicit = diseaseId + ", " + pubmedId + ", 0";
-				articles += "<div class='pubmed-container'>"
-					articles += "<div class='pubmed-feedback'><a onclick='updatePubMedFeedback(" + args + ")'><i class='fas fa-thumbs-down'></i></a>"
-					articles += "<a onclick='updatePubMedFeedback(" + ExplicitUp + ")'><i class='fas fa-thumbs-up'></i></a></div>"
-					articles += "<div class='pubmed-title'><a target='blank' href='https://www.ncbi.nlm.nih.gov/pubmed/" + content.articles[i].pubMedId + "' onclick=updatePubMedFeedback(" + argsImplicit + ")'>" + content.articles[i].title + "</a></div>"
-					articles += "<div class='pubmed-description'>" + content.articles[i].description + "</div>"
+				var args = '"downPub' + pubmedId + '", ' + diseaseId + ', ' + pubmedId + ', 3';
+				var ExplicitUp = '"upPub' + pubmedId + '", ' + diseaseId + ', ' + pubmedId + ', 1';
+				var argsImplicit = "-1" + diseaseId + ", " + pubmedId + ", 0";
+				articles += "<div class='pubmed-container'>";
+					articles += "<div class='pubmed-feedback'><a id='downPub" + pubmedId + "' onclick='updatePubMedFeedback(" + args + ")'><i class='fas fa-thumbs-down'></i></a>";
+					articles += "<a id='upPub" + pubmedId + "' onclick='updatePubMedFeedback(" + ExplicitUp + ")'><i class='fas fa-thumbs-up'></i></a></div>";
+					articles += "<div class='pubmed-title'><a target='blank' href='https://www.ncbi.nlm.nih.gov/pubmed/" + content.articles[i].pubMedId + "' onclick='updatePubMedFeedback(" + argsImplicit + ")'>" + content.articles[i].title + "</a></div>";
+					articles += "<div class='pubmed-description'>" + content.articles[i].description + "</div>";
 					articles += "<div class='pubmed-related'><b>Related diseases:</b> "; 
 					for (var j = 0; j < content.articles[i].mentionedDiseases.length; j++){
-						articles+= "<a href='#disease=" + content.articles[i].mentionedDiseases[j].id + "'>" + content.articles[i].mentionedDiseases[j].name + ", </a>"
+						articles+= "<a href='#disease=" + content.articles[i].mentionedDiseases[j].id + "'>" + content.articles[i].mentionedDiseases[j].name + ", </a>";
 					}
 					articles+= "</div>";
 
@@ -71,22 +72,34 @@ if (diseaseId != undefined){
 			}
 			
 			for (var i = 0; i < content.images.length; i++){
-				var img = document.createElement("img");
-				img.setAttribute('src', content.images[i].url);
-				img.setAttribute('class', 'mySlides');
-				document.getElementById("slide-container").appendChild(img);
+				var imgId = content.images[i].id;
+				var args = diseaseId + ", " + imgId + ", 3";
+				var ExplicitUp = diseaseId + ", " + imgId + ", 1";
+				var argsImplicit = diseaseId + ", " + imgId + ", 0";
+				images += "<div class='mySlides'>";
+					images += "<a target='blank' href='" + content.images[i].url + "' onclick='updateImgFeedback(" + argsImplicit + ")'><img src='" + content.images[i].url + "'></img></a>";
+					images += "<a onclick='updateImgFeedback(" + args + ")'><i class='fas fa-thumbs-down'></i></a>";
+					images += "<a onclick='updateImgFeedback(" + ExplicitUp + ")'><i class='fas fa-thumbs-up'></i></a>";
+				images += "</div>";
 			}
 
 			for (var i = 0; i < content.tweets.length; i++){
-				tweets += "<div class='tweet-container'>"
-					tweets += "<div class='tweet-description'>" + content.tweets[i].description + "</div>"
-					tweets += "<div class='tweet-date'><a target='blank' href='https://twitter.com/statuses/" + content.tweets[i].url + "'>" + content.tweets[i].pubDate + "</a></div>"
-				tweets += "</div>";
+				var tweeetId = content.tweets[i].id;
+				var args = diseaseId + ", " + tweeetId + ", 3";
+				var ExplicitUp = diseaseId + ", " + tweeetId + ", 1";
+				var argsImplicit = diseaseId + ", " + tweeetId + ", 0";
+				tweets += "<div class='tweet-container'>";
+					tweets += "<div class='tweet-description'>" + content.tweets[i].description + "</div>";
+					tweets += "<div class='tweet-feedback'><a onclick='updateTweetFeedback(" + args + ")'><i class='fas fa-thumbs-down'></i></a>";
+					tweets += "<a onclick='updateTweetFeedback(" + ExplicitUp + ")'><i class='fas fa-thumbs-up'></i></a></div>";
+					tweets += "<div class='tweet-date'><a target='blank' href='https://twitter.com/statuses/" + content.tweets[i].url + "' onclick='updateTweetFeedback(" + argsImplicit + ")'>" + content.tweets[i].pubDate + "</a></div>";
+				tweets += "</div><br />";
 			}
 
 			document.getElementById('disease').innerHTML = info;
 			document.getElementById('articles').innerHTML = articles;
 			document.getElementById('tweets').innerHTML = tweets;
+			document.getElementById('slide-container').innerHTML = images;
         }
 
 
@@ -98,7 +111,7 @@ if (diseaseId != undefined){
 }
 
 
-function updatePubMedFeedback(diseaseId, pubmedId, op){
+function updatePubMedFeedback(feedbackName, diseaseId, pubmedId, op){
 	ajax.onreadystatechange = function () {
 
         var html = ajax.responseText;
@@ -106,7 +119,9 @@ function updatePubMedFeedback(diseaseId, pubmedId, op){
 
 			var content = JSON.parse(html);
 
-			console.log("Feedback PubMed: " + content);
+			document.getElementById(feedbackName).classList.add("activated");
+
+			console.log("Feedback PubMed " + feedbackName + ": " + content);
 		}
 
     };
@@ -146,8 +161,8 @@ function updateTweetFeedback(diseaseId, tweetId, op){
 			console.log("Feedback Tweet: " + content);
 		}
 
-    };
-    
+	};
+	
     ajax.open('POST', apiBaseUrl + "feedback/tweet?diseaseId=" + diseaseId + "&tweetId=" + tweetId + "&operation=" + op, true);
 	ajax.send();
 }
