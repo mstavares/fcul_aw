@@ -1,5 +1,6 @@
 var ajax = createObject();
 
+ajax.timeout = 30000;
 
 function createObject(){
 

@@ -54,12 +54,12 @@ if (diseaseId != undefined){
 
 			for (var i = 0; i < content.articles.length; i++){
 				var pubmedId = content.articles[i].id;
-				var args = diseaseId + ", " + pubmedId + ", 3";
-				var ExplicitUp = diseaseId + ", " + pubmedId + ", 1";
-				var argsImplicit = diseaseId + ", " + pubmedId + ", 0";
+				var args = '"downPub' + pubmedId + '", ' + diseaseId + ', ' + pubmedId + ', 3';
+				var ExplicitUp = '"upPub' + pubmedId + '", ' + diseaseId + ', ' + pubmedId + ', 1';
+				var argsImplicit = "-1" + diseaseId + ", " + pubmedId + ", 0";
 				articles += "<div class='pubmed-container'>";
-					articles += "<div class='pubmed-feedback'><a onclick='updatePubMedFeedback(" + args + ")'><i class='fas fa-thumbs-down'></i></a>";
-					articles += "<a onclick='updatePubMedFeedback(" + ExplicitUp + ")'><i class='fas fa-thumbs-up'></i></a></div>";
+					articles += "<div class='pubmed-feedback'><a id='downPub" + pubmedId + "' onclick='updatePubMedFeedback(" + args + ")'><i class='fas fa-thumbs-down'></i></a>";
+					articles += "<a id='upPub" + pubmedId + "' onclick='updatePubMedFeedback(" + ExplicitUp + ")'><i class='fas fa-thumbs-up'></i></a></div>";
 					articles += "<div class='pubmed-title'><a target='blank' href='https://www.ncbi.nlm.nih.gov/pubmed/" + content.articles[i].pubMedId + "' onclick='updatePubMedFeedback(" + argsImplicit + ")'>" + content.articles[i].title + "</a></div>";
 					articles += "<div class='pubmed-description'>" + content.articles[i].description + "</div>";
 					articles += "<div class='pubmed-related'><b>Related diseases:</b> "; 
@@ -93,7 +93,7 @@ if (diseaseId != undefined){
 					tweets += "<div class='tweet-feedback'><a onclick='updateTweetFeedback(" + args + ")'><i class='fas fa-thumbs-down'></i></a>";
 					tweets += "<a onclick='updateTweetFeedback(" + ExplicitUp + ")'><i class='fas fa-thumbs-up'></i></a></div>";
 					tweets += "<div class='tweet-date'><a target='blank' href='https://twitter.com/statuses/" + content.tweets[i].url + "' onclick='updateTweetFeedback(" + argsImplicit + ")'>" + content.tweets[i].pubDate + "</a></div>";
-				tweets += "</div>";
+				tweets += "</div><br />";
 			}
 
 			document.getElementById('disease').innerHTML = info;
@@ -111,7 +111,7 @@ if (diseaseId != undefined){
 }
 
 
-function updatePubMedFeedback(diseaseId, pubmedId, op){
+function updatePubMedFeedback(feedbackName, diseaseId, pubmedId, op){
 	ajax.onreadystatechange = function () {
 
         var html = ajax.responseText;
@@ -119,7 +119,9 @@ function updatePubMedFeedback(diseaseId, pubmedId, op){
 
 			var content = JSON.parse(html);
 
-			console.log("Feedback PubMed: " + content);
+			document.getElementById(feedbackName).classList.add("activated");
+
+			console.log("Feedback PubMed " + feedbackName + ": " + content);
 		}
 
     };
